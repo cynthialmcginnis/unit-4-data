@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What the Data Teaches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9e4d8;--paper:#fbf8f1;--paper2:#f3eee2;--ink:#1d2430;--muted:#5a6270;--line:#d9d1bf;--accent:#0f6e6e;--accent-soft:#d5ecea;--amber:#b86a0c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#11151b;--paper:#1b212a;--paper2:#232b36;--ink:#ece7dc;--muted:#a3abb8;--line:#333d4a;--accent:#4fc3b8;--accent-soft:#163a3a;--amber:#f0a94a}}
+:root[data-theme="dark"]{--bg:#11151b;--paper:#1b212a;--paper2:#232b36;--ink:#ece7dc;--muted:#a3abb8;--line:#333d4a;--accent:#4fc3b8;--accent-soft:#163a3a;--amber:#f0a94a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 "Source Sans 3",system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:48px 16px 64px}
+.kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:6px}
+h1{font-family:Fraunces,Georgia,serif;font-size:clamp(2.2rem,6vw,3.4rem);line-height:1.1;margin:0 0 .4em}
+h2{font-family:Fraunces,Georgia,serif;font-size:1.45rem;margin:0 0 .35em}
+.lead{font-size:1.15rem;color:var(--muted);max-width:44em}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:28px}
+a.card{display:block;text-decoration:none;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:24px 24px 22px;box-shadow:0 12px 34px rgba(40,30,10,.10);transition:transform .15s,border-color .15s}
+a.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+a.card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.card p{margin:.3em 0 1em;color:var(--muted)}
+.go{font-weight:700;color:var(--accent)}
+.order{display:inline-block;font-size:.8rem;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin-bottom:10px}
+.note{margin-top:30px;font-size:.92rem;color:var(--muted);border-left:4px solid var(--amber);padding:4px 14px}
+</style>
+</head>
+<body>
+<main>
+ <div class="kicker">Unit 4 · Data selection and preparation</div>
+ <h1>What the Data Teaches</h1>
+ <p class="lead">How to choose data you can trust, get it ready for a model, and match the right type of artificial intelligence (AI) to the right data.</p>
+ <div class="cards">
+  <a class="card" href="lecture.html">
+   <span class="order">Part 1</span>
+   <h2>The lecture</h2>
+   <p>Data types, the five dimensions of data quality, where bias hides, preparing data, splitting it, and testing it. Every section has checks to try, and the night ends with a capstone workshop.</p>
+   <span class="go">Open the lecture →</span>
+  </a>
+  <a class="card" href="sprint.html">
+   <span class="order">Part 2</span>
+   <h2>AI Lab Sprint: Right AI, Right Data</h2>
+   <p>Ten made-up organizations, each with a problem and a set of data. Your team picks the type of AI and the tool, then builds a real model on mock data in your browser.</p>
+   <span class="go">Open the sprint →</span>
+  </a>
+ </div>
+ <p class="note">Both pages run entirely in your web browser. Nothing you type is sent anywhere. Your work saves only in the browser on your own device.</p>
+</main>
+</body>
+</html>

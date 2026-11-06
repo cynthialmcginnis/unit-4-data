@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Right AI, Right Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c0:#b9b2a3; --c1:#009488; --c2:#c46c00; --c3:#7a52c7; --c4:#d0507e; --c5:#3d86c6;
+  --bg:#e9e4d8; --paper:#fbf8f1; --paper2:#f3eee2; --ink:#1d2430; --muted:#5a6270; --line:#d9d1bf;
+  --accent:#0f6e6e; --accent-soft:#d5ecea; --amber:#b86a0c; --amber-soft:#f8e6cc;
+  --good:#2e7d4f; --good-soft:#dcefe2; --bad:#b3362c; --bad-soft:#f6dcd8; --violet:#5b4bb0; --violet-soft:#e4e0f6;
+  --shadow:0 14px 40px rgba(40,30,10,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --c0:#56606d; --c1:#14a094; --c2:#c97a20; --c3:#8a6ddb; --c4:#d65a87; --c5:#4590d6;
+    --bg:#11151b; --paper:#1b212a; --paper2:#232b36; --ink:#ece7dc; --muted:#a3abb8; --line:#333d4a;
+    --accent:#4fc3b8; --accent-soft:#163a3a; --amber:#f0a94a; --amber-soft:#3d2c14;
+    --good:#6fcf97; --good-soft:#173324; --bad:#f07a6e; --bad-soft:#3d1c19; --violet:#a99cf0; --violet-soft:#29244a;
+    --shadow:0 14px 40px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --c0:#56606d; --c1:#14a094; --c2:#c97a20; --c3:#8a6ddb; --c4:#d65a87; --c5:#4590d6;
+    --bg:#11151b; --paper:#1b212a; --paper2:#232b36; --ink:#ece7dc; --muted:#a3abb8; --line:#333d4a;
+  --accent:#4fc3b8; --accent-soft:#163a3a; --amber:#f0a94a; --amber-soft:#3d2c14;
+  --good:#6fcf97; --good-soft:#173324; --bad:#f07a6e; --bad-soft:#3d1c19; --violet:#a99cf0; --violet-soft:#29244a;
+  --shadow:0 14px 40px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 "Source Sans 3",system-ui,sans-serif}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .45em}
+h1{font-size:clamp(2rem,5vw,3.2rem)} h2{font-size:clamp(1.4rem,3vw,2rem)} h3{font-size:1.15rem}
+p{margin:.4em 0 .9em} button{font:inherit;color:inherit}
+.mono{font-family:"JetBrains Mono",monospace;font-size:.88em}
+#top{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:8px 16px;flex-wrap:wrap}
+#top .t{font-weight:700;flex:1;min-width:160px}
+#steps{display:flex;gap:4px;flex-wrap:wrap}
+#steps span,#steps button{font:inherit;font-size:.8rem;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);background:transparent}
+#steps button{cursor:pointer}
+#steps button:hover{border-color:var(--accent);color:var(--accent)}
+.topback{margin:0 0 14px}
+#steps span.on{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+#steps span.done{border-color:var(--accent);color:var(--accent)}
+.tb{border:1px solid var(--line);background:var(--paper2);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:.88rem}
+main{max-width:1080px;margin:0 auto;padding:22px 16px 60px}
+.sheet{background:var(--paper);border-radius:14px;box-shadow:var(--shadow);padding:30px 34px;margin-bottom:18px}
+.kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:6px}
+.lead{font-size:1.15rem}
+.muted{color:var(--muted)}
+.def{border-left:5px solid var(--accent);background:var(--accent-soft);padding:10px 16px;border-radius:0 10px 10px 0;margin:12px 0}
+.next{display:flex;gap:10px;border-left:5px solid var(--amber);background:var(--amber-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+.next .lbl{color:var(--amber);white-space:nowrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.grid2>*{min-width:0}
+.card{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+label.f{display:block;font-weight:600;margin:14px 0 5px}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:92px;resize:vertical}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--paper);border-radius:9px;padding:9px 18px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.sitepick{display:flex;gap:8px}
+.sitepick button{flex:1;border:2px solid var(--line);background:var(--paper);border-radius:10px;padding:12px;cursor:pointer;font-weight:700}
+.sitepick button.on{border-color:var(--accent);background:var(--accent-soft)}
+.counter{font-size:.85rem;color:var(--muted)}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:10px}
+.org{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:16px;cursor:pointer;text-align:left;position:relative}
+.org:hover{border-color:var(--accent)}
+.org .no{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--muted)}
+.org .pill,.pill{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--violet-soft);color:var(--violet);margin:4px 4px 0 0}
+.org.done{border-color:var(--good);background:var(--good-soft)}
+.org .stamp{position:absolute;top:10px;right:12px;font-size:.75rem;font-weight:700;color:var(--good)}
+.choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:10px 0}
+.choice{border:2px solid var(--line);background:var(--paper);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left}
+.choice:hover{border-color:var(--accent)}
+.choice.on{border-color:var(--accent);background:var(--accent-soft)}
+.choice b{display:block;margin-bottom:3px}
+.choice .d{font-size:.9rem}
+.choice .in{font-size:.84rem;color:var(--muted);margin-top:4px}
+.choice.best{border-color:var(--good);background:var(--good-soft)}
+.choice.ok{border-color:var(--amber);background:var(--amber-soft)}
+.choice.miss{border-color:var(--bad);background:var(--bad-soft)}
+.choices.locked .choice{cursor:default}
+.choices.small{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.choices.small .choice{padding:9px 12px}
+.choices.small .d{font-size:.84rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem;margin:8px 0}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.datab{overflow-x:auto}
+.datab td{font-family:"JetBrains Mono",monospace;font-size:.82rem;white-space:nowrap}
+.sample{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:.92rem;background:var(--paper)}
+.verdict{border-radius:12px;padding:14px 16px;margin:12px 0}
+.verdict.best{background:var(--good-soft);border:1px solid var(--good)}
+.verdict.ok{background:var(--amber-soft);border:1px solid var(--amber)}
+.verdict.miss{background:var(--bad-soft);border:1px solid var(--bad)}
+.good{color:var(--good)} .bad{color:var(--bad)} .amb{color:var(--amber)}
+.score{font-family:Fraunces,serif;font-size:1.6rem;color:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:20px;overflow:auto}
+.modal.show{display:flex}
+.modal .box{background:var(--paper);border-radius:16px;padding:28px 32px;max-width:900px;width:100%;box-shadow:var(--shadow)}
+.blur{filter:blur(9px);user-select:none;transition:filter .5s}
+.handout{display:none}
+.ver{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--amber-soft);color:var(--amber);margin-left:6px;vertical-align:2px}
+.parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+.parts .card b{display:block;color:var(--accent)}
+select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.kindtag{display:inline-block;font-family:"Source Sans 3",sans-serif;font-size:.72rem;font-weight:700;letter-spacing:0;text-transform:none;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.ins{display:flex;flex-direction:column;gap:6px}
+.inbox{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--paper);cursor:pointer}
+.concl{border-left:5px solid var(--violet);margin:14px 0}
+.concl ul{margin:6px 0 0;padding-left:20px}
+.concl li{margin:5px 0}
+.chartbox{margin:16px 0}
+.chartbox .ct{font-weight:700;margin-bottom:6px}
+.chart{display:block;width:100%;max-width:680px;height:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.chart .tx{font:12px "Source Sans 3",system-ui,sans-serif;fill:var(--muted)}
+.chart .tx.s{font-size:11px}
+.chart .tx.b{fill:var(--ink);font-weight:700}
+.chart .tx.on{fill:#fff;font-weight:700}
+.chart .ax{stroke:var(--muted);stroke-width:1;opacity:.6}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ref{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;margin:4px 0 8px}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.lg i.dot{border-radius:50%}
+.lg i.ring{background:transparent!important;border:2.5px solid var(--c2);border-radius:50%}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:12px 0}
+.lines{border-bottom:1px solid #999;height:28px}
+@media (max-width:760px){ .grid2{grid-template-columns:1fr} .sheet{padding:20px 16px} }
+@media print{
+  body{background:#fff;color:#000;font-size:12pt}
+  #top,.noprint,.modal{display:none!important}
+  main{padding:0;max-width:none}
+  .sheet{box-shadow:none;padding:0;margin:0 0 14px}
+  body.ho #app{display:none}
+  body.ho .handout{display:block}
+  .pb{page-break-before:always}
+  .verdict,.card,.choice{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div id="top">
+  <div class="t">Unit 4 AI Lab Sprint · Right AI, Right Data <span class="ver">Version 2 · with Part D, Test it on data</span></div>
+  <div id="steps"></div>
+  <button class="tb noprint" id="theme" title="Light or dark">◐</button>
+</div>
+<main id="app"></main>
+<div class="handout" id="handout"></div>
+
+<div class="modal" id="brief"><div class="box" id="briefBox"></div></div>
+
+<script>
+/* ======================= DATA ======================= */
+const TYPES=[
+ {id:'class',name:'Classification',d:'Sorts each record into one of a set of categories, learned from labeled examples.'},
+ {id:'reg',name:'Regression',d:'Predicts a number.'},
+ {id:'fore',name:'Time-series forecasting',d:'Predicts future values of a number from its past values over time.'},
+ {id:'clus',name:'Clustering',d:'Finds groups of similar records on its own. Needs no labels.'},
+ {id:'anom',name:'Anomaly detection',d:'Flags records that are unusual compared with the rest. Needs no labels.'},
+ {id:'rec',name:'Recommendation',d:'Suggests items to each person based on what similar people did.'},
+ {id:'rl',name:'Reinforcement learning',d:'An agent learns by trial and error. It tries actions, earns or loses points, and over many tries learns which actions earn the most.'},
+ {id:'od',name:'Object detection',d:'Finds where things are in an image and draws a box around each one.'},
+ {id:'speech',name:'Speech recognition',d:'Turns spoken words in audio into written text.'},
+ {id:'sent',name:'Sentiment analysis',d:'Reads text and judges whether its tone is positive, negative, or neutral.'},
+ {id:'gen',name:'Generation',d:'Creates new text, images, or code from instructions, such as a chatbot. This is generative AI (GenAI).'}];
+const TOOLS=[
+ {id:'canvas',name:'Amazon SageMaker Canvas',d:'Builds a prediction model from your data with no coding. Predicts a category or a number, and can forecast a number over time.',in:'Takes in: tables with a column to predict. It can also train on labeled images or labeled text.'},
+ {id:'azure',name:'Azure Machine Learning automated ML',d:'Automated machine learning (ML): tries many models on your table and keeps the best one, with little or no coding. Predicts a category or a number, or forecasts over time.',in:'Takes in: tables with a column to predict.'},
+ {id:'vertex',name:'Google Vertex AI AutoML',d:'Trains a custom model from your labeled data with little or no coding. Predicts a category or a number, forecasts over time, or learns to recognize things in images.',in:'Takes in: tables with a column to predict, or labeled images.'},
+ {id:'orange',name:'Orange Data Mining',d:'Free visual tool with no coding. You connect boxes on screen to sort records into categories, predict numbers, find groups, or flag unusual records.',in:'Takes in: tables.'},
+ {id:'knime',name:'KNIME Analytics Platform',d:'Free visual tool with no coding. You connect boxes on screen to clean data, sort records into categories, predict numbers, find groups, or flag unusual records.',in:'Takes in: tables.'},
+ {id:'excel',name:'Microsoft Excel Forecast Sheet',d:'Projects a number forward in time from its past values.',in:'Takes in: one column of dates and one column of numbers.'},
+ {id:'rekog',name:'Amazon Rekognition Custom Labels',d:'Learns to recognize things in photos that you label yourself. It can sort whole photos into categories or draw boxes around objects.',in:'Takes in: labeled images.'},
+ {id:'gvision',name:'Google Cloud Vision API',d:'Recognizes common objects, faces, and printed text in photos, using a model Google already trained. It does not learn your own categories. API means application programming interface: a way for other software to use the tool.',in:'Takes in: images.'},
+ {id:'tm',name:'Google Teachable Machine',d:'Trains a simple model in your web browser to recognize images, sounds, or body poses. Free and quick for a test, not built for daily use.',in:'Takes in: images, sound clips, or poses from a webcam.'},
+ {id:'comp',name:'Amazon Comprehend',d:'Reads text and finds sentiment, key phrases, and topics. Its custom classification feature learns your own categories from labeled examples.',in:'Takes in: text.'},
+ {id:'gnl',name:'Google Cloud Natural Language',d:'Reads text and finds its sentiment, the names of people and places in it, and its general topic, using a model Google already trained.',in:'Takes in: text.'},
+ {id:'translate',name:'Amazon Translate',d:'Translates text from one language to another.',in:'Takes in: text.'},
+ {id:'trans',name:'Amazon Transcribe',d:'Turns speech in audio files into written text.',in:'Takes in: audio recordings.'},
+ {id:'gstt',name:'Google Cloud Speech-to-Text',d:'Turns speech in audio into written text, in many languages.',in:'Takes in: audio recordings.'},
+ {id:'polly',name:'Amazon Polly',d:'Turns written text into spoken audio.',in:'Takes in: text.'},
+ {id:'textract',name:'Amazon Textract',d:'Pulls printed and handwritten text and tables out of scanned documents.',in:'Takes in: scanned pages and PDF files.'},
+ {id:'pers',name:'Amazon Personalize',d:'Suggests items to each user based on what similar users chose.',in:'Takes in: records of which user used or bought which item, and when.'},
+ {id:'sb3',name:'Stable-Baselines3 with Gymnasium',d:'Free Python code library. An agent learns by trial and error inside a simulation, earning points for good actions. Requires coding.',in:'Takes in: a simulation with a point score, not a table of past examples.'}];
+
+/* best/ok: lists of ids. why: shown after lock-in. */
+const CASES=[
+ {id:'c1',no:'Case 1',site:'Yokota',name:'Pacific Rim Logistics',area:'Logistics',data:'Table',
+  what:'A parts supply depot that ships aircraft and ship parts to bases across the Pacific.',
+  who:'The logistics chief',
+  problem:'Every morning the logistics chief picks which incoming shipments her team tracks closely. She wants to know, for each shipment, whether it will arrive late.',
+  have:'18,000 past shipments from the last four years. Each row is one shipment. The last column records whether it arrived late.',
+  sample:{cols:['shipment_id','origin_port','carrier','weight_kg','days_scheduled','customs_hold','arrived_late'],
+   rows:[['S-20411','Busan','Carrier A','412','6','No','No'],['S-20412','Long Beach','Carrier C','2,180','14','Yes','Yes'],['S-20413','Singapore','Carrier B','95','9','No','No']]},
+  type:{best:['class'],ok:[]},
+  tool:{best:['canvas'],ok:['azure','vertex','orange','knime']},
+  typeWhy:'The output is a category: late or on time. The data already has that label for every past shipment, so the model can learn from examples. That is classification.',
+  toolWhy:'The data is a table with a labeled column to predict, which is exactly what SageMaker Canvas takes in, with no coding. Azure automated ML and Vertex AI AutoML do the same job on other clouds, and Orange and KNIME can classify a table for free. All four are accepted. Excel Forecast Sheet is not a fit: it projects a number over time, not a yes or no for each shipment.',
+  concern:'Representation: if most shipments came from a few ports, the model may not learn routes it rarely saw. Timeliness: carriers and routes change, so four-year-old shipments may not match today.'},
+ {id:'c2',no:'Case 2',site:'Iwakuni',name:'Kintai Coffee Roasters',area:'Business',data:'Table over time',
+  what:'A small coffee roaster near the base that sells beans to cafes and at its own shop.',
+  who:'The owner',
+  problem:'Every Friday the owner decides how many kilograms of coffee beans to roast for the next week. Roast too much and the beans go stale. Roast too little and the shop runs out.',
+  have:'Three years of daily sales. Each row is one day.',
+  sample:{cols:['date','day_of_week','kg_sold','holiday','rain','base_payday'],
+   rows:[['2026-10-12','Monday','18.5','No','Yes','No'],['2026-10-13','Tuesday','21.0','No','No','No'],['2026-10-15','Thursday','29.5','No','No','Yes']]},
+  type:{best:['fore'],ok:['reg']},
+  tool:{best:['canvas','azure','vertex'],ok:['excel','orange','knime']},
+  typeWhy:'The output is a number for future days, predicted from past days: kilograms of beans next week. That is time-series forecasting. Regression is accepted, because forecasting is a kind of regression, but regression alone does not use the order of the days.',
+  toolWhy:'SageMaker Canvas, Azure automated ML, and Vertex AI AutoML all forecast a number over time and can use the extra columns such as holidays and paydays. Excel Forecast Sheet is accepted: it is quick and free, but it uses only the date and kg_sold columns and ignores holidays and paydays. Orange and KNIME are accepted because they can predict a number from a table.',
+  concern:'Completeness: days the shop was closed may be missing or recorded as zero sales. Timeliness: a new cafe customer or a base population change makes old sales a poor guide.'},
+ {id:'c3',no:'Case 3',site:'Yokota',name:'Shield Point Cyber',area:'Cybersecurity',data:'Text',
+  what:'A cybersecurity company that protects email for several small defense contractors.',
+  who:'The on-duty security analyst',
+  problem:'Every hour the analyst decides which incoming emails to block. She wants each email marked as phishing or safe. Phishing is a fake email that tries to trick a person into giving up a password or opening a harmful file.',
+  have:'40,000 past emails. Analysts already marked each one as phishing or safe.',
+  sampleText:['Subject: Your mailbox is full. Click here within 24 hours to keep your account. → <b>phishing</b>','Subject: Minutes from Tuesday\'s contract review are attached. → <b>safe</b>','Subject: Payroll update required. Confirm your bank details today. → <b>phishing</b>'],
+  type:{best:['class'],ok:[]},
+  tool:{best:['comp'],ok:['canvas']},
+  typeWhy:'The output is a category: phishing or safe. The analysts already labeled 40,000 examples, so the model learns from them. That is classification. The data is text, so this is classification using natural language processing.',
+  toolWhy:'Amazon Comprehend reads text, and its custom classification feature learns the company\'s own two categories from the labeled emails. SageMaker Canvas can also train on labeled text, so it is accepted. Google Cloud Natural Language is not a fit: it finds tone and general topics with a model Google already trained, and it does not learn the company\'s own phishing labels.',
+  concern:'Timeliness: phishing tricks change every month, so old examples go stale fast. Representation: if almost all phishing examples are in English, Japanese-language phishing may slip through.'},
+ {id:'c4',no:'Case 4',site:'Iwakuni',name:'Gate Watch Security',area:'Physical security',data:'Table',
+  what:'A security company that guards a business park with 30 buildings. Every door opens with an ID badge. Each time someone holds a badge to a door reader, the system records a <b>badge swipe</b>: who, which door, and when. IT means information technology.',
+  who:'The night security supervisor',
+  problem:'Last month someone used a cleaning crew badge to enter a server room at 2 a.m. and took two laptops. Nobody noticed for a week. The park records about 5,500 badge swipes every night, far too many for one person to read. Each morning the supervisor wants a short list of last night\'s swipes that do not fit the usual pattern, so a guard can check the camera video for those swipes first.',
+  have:'Two million badge swipes from the last year. Each row is one swipe. Nobody has ever marked which past swipes were suspicious, so no column says "suspicious."',
+  sample:{cols:['badge_id','building','door','time','day','access_granted','role'],
+   rows:[['B-0381','12','Server room','02:14','Sunday','Yes','Cleaning staff'],['B-1177','4','Main lobby','07:52','Monday','Yes','Office staff'],['B-0920','4','Loading dock','07:55','Monday','No','Visitor']]},
+  type:{best:['anom'],ok:['clus']},
+  tool:{best:['orange','knime'],ok:[]},
+  typeWhy:'There are no labels, so the model cannot learn what "suspicious" looks like from examples. It can learn what normal looks like and flag swipes that are unusual, such as a cleaning badge at the server room at 2 a.m. That is anomaly detection. Clustering is accepted as a second answer: you could find groups of normal behavior and look at the swipes that fit no group.',
+  toolWhy:'Orange Data Mining and KNIME both take a table and can flag unusual records with no labels and no coding. SageMaker Canvas, Azure automated ML, and Vertex AI AutoML are not a fit here, because each needs a labeled column to predict, and this data has none.',
+  concern:'Consistency: door names or building numbers may be typed differently by different systems. Accuracy: a broken badge reader can create thousands of false "unusual" swipes.'},
+ {id:'c5',no:'Case 5',site:'Yokota',name:'Hangar 7 Aviation Maintenance',area:'Aviation maintenance',data:'Images',
+  what:'A maintenance company that inspects jet engines for an airline and two military contracts.',
+  who:'The lead engine inspector',
+  problem:'For each engine, the lead inspector decides which fan blades to pull for a close inspection. She wants each blade photo marked as cracked or not cracked.',
+  have:'6,000 photos taken with a borescope, a thin camera pushed inside the engine. Inspectors already labeled each photo cracked or not cracked.',
+  sampleText:['Photo 0412: blade 7, engine 3 → <b>cracked</b>','Photo 0413: blade 8, engine 3 → <b>not cracked</b>','Photo 0414: blade 9, engine 3, oil smudge on lens → <b>not cracked</b>'],
+  type:{best:['class'],ok:['od','anom']},
+  tool:{best:['rekog','vertex'],ok:['canvas','tm']},
+  typeWhy:'The output is a category for each photo: cracked or not cracked, and every photo is already labeled. That is classification using computer vision. Object detection is accepted: it would also show where the crack is, but the inspectors only labeled whole photos, so someone would have to draw boxes first. Anomaly detection is accepted, since a crack is unusual, but it throws away the labels the inspectors already made.',
+  toolWhy:'Rekognition Custom Labels and Vertex AI AutoML both learn from photos you label yourself and handle thousands of images. SageMaker Canvas can also train on labeled images. Teachable Machine is accepted only for a quick test of the idea: it is not built for daily use on engines. Google Cloud Vision API is not a fit: its model already knows common objects, and it cannot learn what a crack in this engine looks like.',
+  concern:'Representation: cracks may be rare in the 6,000 photos, the same problem as the 40 fraud cases. Consistency: photos from different borescopes or lighting can look very different.'},
+ {id:'c6',no:'Case 6',site:'Iwakuni',name:'Seto Community Credit Union',area:'Finance',data:'Table',
+  what:'A credit union for service members, families, and local employees.',
+  who:'The member services manager',
+  problem:'The member services manager is designing new savings programs. Before she designs them, she wants to know what kinds of members the credit union has. Nobody has sorted members into groups before.',
+  have:'9,000 member records. Each row is one member. There is no column that names a group.',
+  sample:{cols:['member_id','age','avg_balance_usd','deposits_per_month','uses_mobile_app','loans_open','years_member'],
+   rows:[['M-1043','22','640','4','Yes','1','1'],['M-1044','47','18,200','1','No','0','15'],['M-1045','31','3,100','2','Yes','2','6']]},
+  type:{best:['clus'],ok:[]},
+  tool:{best:['orange','knime'],ok:[]},
+  typeWhy:'There are no labels and no single thing to predict. The manager wants the model to find groups of similar members on its own. That is clustering.',
+  toolWhy:'Orange Data Mining and KNIME both take a table and have clustering boxes that need no coding. SageMaker Canvas, Azure automated ML, and Vertex AI AutoML are not a fit, because each needs a labeled column to predict.',
+  concern:'Accuracy: balances in yen and dollars mixed in one column would split one group into two. Representation: members who joined last month have little history, so they may all land in one group for the wrong reason.'},
+ {id:'c7',no:'Case 7',site:'Yokota',name:'Hikari Language Academy',area:'Language learning',data:'Table of user activity',
+  what:'An online school that teaches Japanese and English to military families and local employees.',
+  who:'The learning coach',
+  problem:'Every week the learning coach suggests the next lesson to each of 3,000 learners. She wants the suggestions to fit each learner.',
+  have:'250,000 records of lesson activity. Each row shows which learner took which lesson, when, and the quiz score.',
+  sample:{cols:['learner_id','lesson_id','date','completed','quiz_score'],
+   rows:[['L-0201','JP-B1-07','2026-10-28','Yes','82'],['L-0201','JP-B1-08','2026-10-30','No',''],['L-0388','EN-A2-03','2026-10-29','Yes','95']]},
+  type:{best:['rec'],ok:[]},
+  tool:{best:['pers'],ok:[]},
+  typeWhy:'The output is a ranked list of lessons for each learner, based on what similar learners did next. That is recommendation.',
+  toolWhy:'Amazon Personalize takes exactly this kind of data: which user used which item, and when. It returns suggestions for each user.',
+  concern:'Cold start: brand-new learners have no history, so there is nothing to base suggestions on at first. Completeness: blank quiz scores for unfinished lessons are not random; they may mark a lesson that was too hard.'},
+ {id:'c8',no:'Case 8',site:'Iwakuni',name:'Peace Corridor Mediation Center',area:'Peace studies',data:'Text',
+  what:'A nonprofit that helps base neighbors and local residents settle disputes, such as noise and parking complaints.',
+  who:'The center director',
+  problem:'The city plans a new night parking rule near the base. Before the town meeting, the director wants to know how residents feel about it: for each comment, is the tone positive, negative, or neutral?',
+  have:'4,200 comments submitted online in English and Japanese. Nobody has marked how any comment feels.',
+  sampleText:['"Finally! Delivery trucks can get through in the morning again."','"This rule punishes families who have nowhere else to park."','"When does the rule start, and which streets does it cover?"'],
+  type:{best:['sent'],ok:['class']},
+  tool:{best:['comp','gnl'],ok:[]},
+  typeWhy:'The output is the tone of each comment: positive, negative, or neutral. That is sentiment analysis. Classification is accepted, because sentiment analysis sorts text into three categories, but plain classification would need labeled examples, and nobody has labeled these comments.',
+  toolWhy:'Amazon Comprehend and Google Cloud Natural Language both judge the tone of text with a model already trained, so the center needs no labeled comments. Both handle English and Japanese. Amazon Translate is not a fit: it changes the language but says nothing about the tone.',
+  concern:'Accuracy: sarcasm ("Great, another rule.") often reads as positive. Representation: residents who comment online may not match residents who come to the meeting, so the count of positive and negative comments may not match the town.'},
+ {id:'c9',no:'Case 9',site:'Yokota',name:'Kaigan Port Warehouse',area:'Software engineering',data:'Simulation',
+  what:'A large warehouse that stores parts for ships, with small robots that carry bins to packing stations.',
+  who:'The robotics engineer',
+  problem:'The engineer wants each robot to learn the fastest path through the aisles while avoiding other robots and people. The best path changes every minute as robots move.',
+  have:'No table of past examples. The engineer has a computer simulation of the warehouse. A robot in the simulation earns points for each bin delivered quickly and loses points for each near-collision.',
+  sampleText:['Try 1: robot takes aisle 4, blocked by another robot, −5 points, delivered in 90 seconds, +2 points','Try 2: robot takes aisle 6, clear, delivered in 41 seconds, +8 points','After 50,000 tries in the simulation: average delivery time falls from 88 seconds to 37 seconds'],
+  type:{best:['rl'],ok:[]},
+  tool:{best:['sb3'],ok:[]},
+  typeWhy:'There are no labeled examples of the right path. The robot learns by trying actions in the simulation, earning and losing points, and keeping what earns the most. That is reinforcement learning.',
+  toolWhy:'Stable-Baselines3 with Gymnasium is built for an agent learning inside a simulation with a point score. The table tools are not a fit, because there is no table of past examples with a column to predict. This is the one case where the team would need someone who can write code.',
+  concern:'Representativeness: if the simulation leaves out people walking the aisles or a broken robot, what the robot learns may fail in the real warehouse. Accuracy of the points: if the score rewards speed too much, the robot learns to cut corners near people.'},
+ {id:'c10',no:'Case 10',site:'Iwakuni',name:'Setouchi Net',area:'Technical support',data:'Audio',
+  what:'An internet service provider for homes on and near the base.',
+  who:'The support center manager',
+  problem:'The manager wants every recorded support call turned into written text, so supervisors can search the calls for problems such as "router" or "outage" instead of listening to hours of audio.',
+  have:'About 900 recorded calls a week, in English and Japanese, each 3 to 15 minutes long.',
+  sampleText:['Call 22-0418, 6 minutes, English: customer reports the connection drops every evening','Call 22-0419, 11 minutes, Japanese: customer asks about moving service to a new address','Call 22-0420, 4 minutes, English, noisy background: router lights blinking orange'],
+  type:{best:['speech'],ok:[]},
+  tool:{best:['trans','gstt'],ok:[]},
+  typeWhy:'The output is written text made from spoken words. That is speech recognition.',
+  toolWhy:'Amazon Transcribe and Google Cloud Speech-to-Text both take audio recordings and return written text, and both handle English and Japanese. Amazon Polly is not a fit: it does the opposite, turning text into speech. Teachable Machine can learn a few sounds, but it cannot write out whole conversations.',
+  concern:'Accuracy: background noise, accents, and technical words such as router model numbers cause transcription errors. Privacy: calls contain names and addresses, so the text needs the same protection as the recordings.'}];
+const GEN_WHY='GenAI is fine for a chatbot, but it is never the best choice for this kind of task. Its output is probabilistic: it picks each word by chance weighted by probability, so the same input can give a different answer each time. An organization that acts on the output needs the same answer for the same input.';
+const PROBS=[
+ {id:'acc',g:'q',name:'Accuracy',d:'Do the values match reality? Example: an age of 212, or a broken sensor reading.'},
+ {id:'comp',g:'q',name:'Completeness',d:'Is anything missing? Ask which records are missing, not just how many.'},
+ {id:'cons',g:'q',name:'Consistency',d:'Is the same thing recorded the same way everywhere? Example: "USMC" and "Marine Corps" in one column.'},
+ {id:'time',g:'q',name:'Timeliness',d:'Is the data current enough for the purpose? Old data can describe a world that has changed.'},
+ {id:'repv',g:'q',name:'Representativeness',d:'Does the data match the people or situations the system will serve?'},
+ {id:'sel',g:'b',name:'Selection bias',d:'The way the data was collected left some people or situations out.'},
+ {id:'repb',g:'b',name:'Representation bias',d:'Some groups are in the data, but too rarely for the model to learn them well.'},
+ {id:'meas',g:'b',name:'Measurement bias',d:'A variable is measured badly, or measures the wrong thing.'},
+ {id:'hist',g:'b',name:'Historical bias',d:'The data accurately records an unfair past, and the model learns it.'},
+ {id:'proxy',g:'b',name:'Proxy bias',d:'A harmless-looking variable stands in for a sensitive one. Example: ZIP code standing in for race.'}];
+const probName=id=>(PROBS.find(x=>x.id===id)||{}).name||'';
+const BY_ID=Object.fromEntries(CASES.map(c=>[c.id,c]));
+const NEED=3; /* cases each team must finish */
+const MIN=60; /* minimum characters in each written answer */
+
+/* ======================= STATE ======================= */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KEY='u4raird';
+let S=(()=>{ try{ return JSON.parse(localStorage.getItem(KEY))||null; }catch(e){ return null; } })()||{step:0,team:'',members:'',site:'',work:{},cur:null};
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
+const go=n=>{ S.step=n; save(); render(); scrollTo(0,0); };
+const doneList=()=>CASES.filter(c=>S.work[c.id]&&S.work[c.id].locked);
+const mark=(c,kind,id)=>c[kind].best.includes(id)?2:c[kind].ok.includes(id)?1:0;
+const pts=(c,w)=>[10,5,0][2-mark(c,'type',w.type)]+[10,5,0][2-mark(c,'tool',w.tool)];
+const typeName=id=>(TYPES.find(t=>t.id===id)||{}).name||'';
+const toolName=id=>(TOOLS.find(t=>t.id===id)||{}).name||'';
+const next=t=>`<div class="next"><b class="lbl">Next:</b><div>${t}</div></div>`;
+
+/* theme */
+try{ const t=localStorage.getItem(KEY+'theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+$('#theme').onclick=()=>{ const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; try{localStorage.setItem(KEY+'theme',t);}catch(e){} };
+
+function stepsBar(){
+  const names=['Your team','Pick a case','Work the case: Parts A to D','Report'];
+  const ok=[S.team&&S.site?true:true, !!(S.team.trim()&&S.members.trim()&&S.site), !!(S.cur&&S.work[S.cur]), doneList().length>=NEED];
+  $('#steps').innerHTML=names.map((n,i)=>{ const cls=i===S.step?'on':i<S.step?'done':''; return ok[i]&&i!==S.step?`<button class="${cls}" data-g="${i}" title="Go to ${n}">${i+1}. ${n}</button>`:`<span class="${cls}">${i+1}. ${n}</span>`; }).join('');
+  $$('#steps button').forEach(b=>b.onclick=()=>go(+b.dataset.g));
+}
+function render(){ stepsBar(); [scrTeam,scrBoard,scrCase,scrReport][S.step](); }
+
+/* ======================= SCREEN 1: TEAM ======================= */
+function scrTeam(){
+  $('#app').innerHTML=`<div class="sheet">
+   <div class="kicker">AI Lab Sprint · Unit 4</div><h1>Right AI, Right Data</h1>
+   <p class="lead">Every organization in this sprint has a problem and a set of data. Your team decides which <b>type of artificial intelligence (AI)</b> fits the problem and which <b>AI tool</b> fits the data. Then you explain both choices.</p>
+   <div class="def"><b>How it works.</b> Your site has five organizations. Your team works through <b>at least ${NEED}</b> of them. All of the organizations are made up. Each case has four parts:</div>
+   <div class="parts">
+    <div class="card"><b>Part A</b>Pick the type of AI from a list of ${TYPES.length}, and write why it fits the problem.</div>
+    <div class="card"><b>Part B</b>Pick the AI tool from a list of ${TOOLS.length}, and write how it fits the data.</div>
+    <div class="card"><b>Part C</b>Pick one quality dimension and one type of bias to check, and write why for each. Then lock in your answer and see how it compares.</div>
+    <div class="card"><b>Part D: Test it on data</b>Build a real model on mock data. Pick the output variable, the input variables, and the type of AI. If a choice does not fit the data, a message tells you why. Then explain what the result means for the organization.</div>
+   </div>
+   <p>At the end you brief the other site on one organization and print your report.</p>
+   ${Object.keys(S.work).length?`<div class="verdict ok"><b>This browser has saved work for ${esc(S.team)||'a team'}${S.site?' ('+S.site+')':''}:</b> ${doneList().length} case${doneList().length===1?'':'s'} finished. To keep going, select <b>Go to the cases</b>. To begin a new team from the beginning, select <b>Start over</b>. Print the old report first if you still need it.<div class="row"><button class="btn ghost" id="startOver">Start over</button></div></div>`:''}
+   ${next('Enter your team name and every member\'s full name, and pick your site. Then select <b>Go to the cases</b>.')}
+   <div class="grid2"><div>
+    <label class="f" for="team">Team name</label><input type="text" id="team" value="${esc(S.team)}">
+    <label class="f" for="members">Every team member's full name, one per line</label><textarea id="members">${esc(S.members)}</textarea>
+   </div><div>
+    <label class="f">Your site</label><div class="sitepick"><button data-s="Yokota" class="${S.site==='Yokota'?'on':''}">Yokota</button><button data-s="Iwakuni" class="${S.site==='Iwakuni'?'on':''}">Iwakuni</button></div>
+    <p class="counter" style="margin-top:14px">Your work saves in this browser. Use one laptop per team.</p>
+    <p class="counter">No device? Your instructor can print the paper version.</p>
+    <button class="btn ghost noprint" id="printHo">Print the paper version</button>
+   </div></div>
+   <div class="row"><button class="btn" id="goBoard" disabled>Go to the cases</button><span class="counter" id="why"></span></div>
+  </div>`;
+  const chk=()=>{ S.team=$('#team').value; S.members=$('#members').value; save();
+    const miss=[!S.team.trim()&&'team name',!S.members.trim()&&'member names',!S.site&&'site'].filter(Boolean);
+    $('#goBoard').disabled=!!miss.length; $('#why').textContent=miss.length?'Still needed: '+miss.join(', ')+'.':''; };
+  $('#team').oninput=chk; $('#members').oninput=chk;
+  $$('.sitepick button').forEach(b=>b.onclick=()=>{ S.site=b.dataset.s; $$('.sitepick button').forEach(x=>x.classList.toggle('on',x===b)); chk(); });
+  $('#goBoard').onclick=()=>go(1); $('#printHo').onclick=printHandout;
+  const so=$('#startOver'); if(so) so.onclick=()=>{ if(!confirm('This clears all saved work in this browser. Continue?')) return; S={step:0,team:'',members:'',site:'',work:{},cur:null}; save(); render(); };
+  chk();
+}
+
+/* ======================= SCREEN 2: BOARD ======================= */
+function scrBoard(){
+  const mine=CASES.filter(c=>c.site===S.site), n=doneList().length;
+  $('#app').innerHTML=`<div class="sheet">
+   <div class="kicker">${esc(S.team)} · ${S.site}</div><h2>Pick a case</h2>
+   <p>These five organizations belong to your site. Finish at least <b>${NEED}</b>. You have finished <b>${n}</b>.</p>
+   ${next(n>=NEED?'You have finished enough cases. Select <b>Go to our report</b>, or work one more case if you have time.':'Select an organization you have not finished yet.')}
+   <div class="board">${mine.map(c=>{ const w=S.work[c.id], d=w&&w.locked;
+     return `<button class="org ${d?'done':''}" data-c="${c.id}">${d?'<span class="stamp">FINISHED</span>':''}<span class="no">${c.no}</span><h3>${c.name}</h3><span class="pill">${c.area}</span><span class="pill">Data: ${c.data}</span><div style="margin-top:8px;font-size:.92rem">${c.what}</div></button>`; }).join('')}</div>
+   <div class="row" style="margin-top:20px"><button class="btn" id="toReport" ${n>=NEED?'':'disabled'}>Go to our report</button><button class="btn ghost" id="back">Back to team setup</button></div>
+  </div>`;
+  $$('.org').forEach(b=>b.onclick=()=>{ S.cur=b.dataset.c; if(!S.work[S.cur]) S.work[S.cur]={type:'',tool:'',whyType:'',whyTool:'',concern:'',locked:false}; go(2); });
+  $('#toReport').onclick=()=>go(3); $('#back').onclick=()=>go(0);
+}
+
+/* ======================= SCREEN 3: CASE ======================= */
+function caseFacts(c){
+  const data = c.sample
+    ? `<div class="datab"><table><tr>${c.sample.cols.map(h=>`<th class="mono" style="text-transform:none">${h}</th>`).join('')}</tr>${c.sample.rows.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</table></div>`
+    : c.sampleText.map(t=>`<div class="sample">${t}</div>`).join('');
+  return `<table>
+    <tr><th style="width:24%">Organization</th><td><b>${c.name}</b>. ${c.what}</td></tr>
+    <tr><th>Who decides</th><td>${c.who}</td></tr>
+    <tr><th>The problem</th><td>${c.problem}</td></tr>
+    <tr><th>The data</th><td><span class="pill">${c.data}</span> ${c.have}</td></tr></table>
+   <div class="muted" style="font-size:.88rem;margin-top:8px">A few examples from the data:</div>${data}`;
+}
+function scrCase(){
+  const c=BY_ID[S.cur], w=S.work[c.id], L=w.locked;
+  const cls=(kind,id)=>{ if(!L) return w[kind]===id?'on':''; const m=mark(c,kind,id); return m===2?'best':m===1?'ok':w[kind]===id?'miss':''; };
+  $('#app').innerHTML=`<div class="sheet">
+   <div class="row topback noprint"><button class="btn ghost" id="toBoardTop">◀ Back to the cases</button></div>
+   <div class="kicker">${c.no} · ${c.area}</div><h2>${c.name}</h2>
+   ${caseFacts(c)}
+  </div>
+  <div class="sheet">
+   <div class="kicker">Part A</div><h3>Pick the type of AI</h3>
+   ${L?'':next('Parts A, B, and C come first. Part D, Test it on data, opens after you lock in your answer. Read the problem again. Ask: what does the AI have to produce, and does the data have labels? Look for a category, a number, a future value, groups, a flag, a list, a box around an object, text from speech, a tone, or new content. Then select one type of AI.')}
+   <div class="choices ${L?'locked':''}" id="typeBox">${TYPES.map(t=>`<button class="choice ${cls('type',t.id)}" data-v="${t.id}"><b>${t.name}</b><div class="d">${t.d}</div></button>`).join('')}</div>
+   <label class="f" for="whyType">Why does this type of AI fit the problem? Name what the AI produces.</label>
+   <textarea id="whyType" ${L?'disabled':''}>${esc(w.whyType)}</textarea><div class="counter" id="cType"></div>
+  </div>
+  <div class="sheet">
+   <div class="kicker">Part B</div><h3>Pick the AI tool</h3>
+   ${L?'':next('Look at the kind of data this organization has. Read what each tool takes in. Then select the one tool that fits both your type of AI and this data.')}
+   <div class="choices ${L?'locked':''}" id="toolBox">${TOOLS.map(t=>`<button class="choice ${cls('tool',t.id)}" data-v="${t.id}"><b>${t.name}</b><div class="d">${t.d}</div><div class="in">${t.in}</div></button>`).join('')}</div>
+   <label class="f" for="whyTool">How does this tool fit the data? Name the kind of data and what the tool takes in.</label>
+   <textarea id="whyTool" ${L?'disabled':''}>${esc(w.whyTool)}</textarea><div class="counter" id="cTool"></div>
+  </div>
+  <div class="sheet">
+   <div class="kicker">Part C</div><h3>Data problems to check</h3>
+   ${L?'':next('Before anyone trusts this AI, someone has to check the data. Look at the data again. Pick <b>one quality dimension</b> and <b>one type of bias</b> that you think are most likely in this organization\'s data. Then write why for each.')}
+   <p style="margin:6px 0 2px"><b>Pick one quality dimension</b> <span class="counter">(from Section 2 of the lecture)</span></p>
+   <div class="choices small ${L?'locked':''}" id="probQ">${PROBS.filter(x=>x.g==='q').map(x=>`<button class="choice ${w.probQ===x.id?'on':''}" data-v="${x.id}"><b>${x.name}</b><div class="d">${x.d}</div></button>`).join('')}</div>
+   <label class="f" for="concern">Why could this quality problem show up in this organization's data? Point to something in the problem or the data.</label>
+   <textarea id="concern" ${L?'disabled':''}>${esc(w.concern)}</textarea><div class="counter" id="cCon"></div>
+   <p style="margin:16px 0 2px"><b>Pick one type of data bias</b> <span class="counter">(from Section 3 of the lecture)</span></p>
+   <div class="choices small ${L?'locked':''}" id="probB">${PROBS.filter(x=>x.g==='b').map(x=>`<button class="choice ${w.probB===x.id?'on':''}" data-v="${x.id}"><b>${x.name}</b><div class="d">${x.d}</div></button>`).join('')}</div>
+   <label class="f" for="concernB">Why could this bias show up in this organization's data? Point to something in the problem or the data.</label>
+   <textarea id="concernB" ${L?'disabled':''}>${esc(w.concernB||'')}</textarea><div class="counter" id="cConB"></div>
+   ${L?verdict(c,w):`${next('When all three parts are done, select <b>Lock in our answer</b>. You cannot change your answer after you lock it in.')}
+   <div class="row"><button class="btn" id="lock" disabled>Lock in our answer</button><span class="counter" id="lockWhy"></span></div>`}
+   <div class="row"><button class="btn ${L?'':'ghost'}" id="toBoard">Back to the cases</button></div>
+  </div>${L?'<div class="sheet" id="wb"></div>':''}`;
+  $('#toBoard').onclick=()=>go(1); $('#toBoardTop').onclick=()=>go(1);
+  if(L){ workbench(c,w); return; }
+  const cnt=(id,out)=>{ const n=$(id).value.trim().length; $(out).textContent=n<MIN?`Write at least ${MIN-n} more characters.`:'Long enough.'; return n>=MIN; };
+  const chk=()=>{ w.whyType=$('#whyType').value; w.whyTool=$('#whyTool').value; w.concern=$('#concern').value; w.concernB=$('#concernB').value; save();
+    const a=cnt('#whyType','#cType'), b=cnt('#whyTool','#cTool'), d=$('#concern').value.trim().length>=25, e=$('#concernB').value.trim().length>=25;
+    $('#cCon').textContent=d?'Long enough.':'Write one or two sentences.'; $('#cConB').textContent=e?'Long enough.':'Write one or two sentences.';
+    const miss=[!w.type&&'a type of AI',!w.tool&&'an AI tool',!a&&'the type reason',!b&&'the tool reason',!w.probQ&&'a quality dimension',!d&&'why the quality problem could show up',!w.probB&&'a type of bias',!e&&'why the bias could show up'].filter(Boolean);
+    $('#lock').disabled=!!miss.length; $('#lockWhy').textContent=miss.length?'Still needed: '+miss.join(', ')+'.':''; };
+  ['#whyType','#whyTool','#concern','#concernB'].forEach(i=>$(i).oninput=chk);
+  $$('#typeBox .choice').forEach(b=>b.onclick=()=>{ w.type=b.dataset.v; $$('#typeBox .choice').forEach(x=>x.classList.toggle('on',x===b)); chk(); });
+  $$('#toolBox .choice').forEach(b=>b.onclick=()=>{ w.tool=b.dataset.v; $$('#toolBox .choice').forEach(x=>x.classList.toggle('on',x===b)); chk(); });
+  $$('#probQ .choice').forEach(b=>b.onclick=()=>{ w.probQ=b.dataset.v; $$('#probQ .choice').forEach(x=>x.classList.toggle('on',x===b)); chk(); });
+  $$('#probB .choice').forEach(b=>b.onclick=()=>{ w.probB=b.dataset.v; $$('#probB .choice').forEach(x=>x.classList.toggle('on',x===b)); chk(); });
+  $('#lock').onclick=()=>{ w.locked=true; w.time=new Date().toISOString(); save(); render(); setTimeout(()=>document.getElementById('verdict').scrollIntoView({behavior:'smooth'}),60); };
+  chk();
+}
+function verdict(c,w){
+  const mt=mark(c,'type',w.type), mo=mark(c,'tool',w.tool), lab=['not a fit','accepted','best answer'], k=['miss','ok','best'];
+  const left=CASES.filter(x=>x.site===S.site).length, n=doneList().length;
+  return `<div id="verdict">
+   <div class="verdict ${k[mt]}"><b>Type of AI: you chose ${typeName(w.type)}. ${lab[mt][0].toUpperCase()+lab[mt].slice(1)}.</b><br>${c.typeWhy}${w.type==='gen'?'<br><br><b>Why not Generation:</b> '+GEN_WHY:''}</div>
+   <div class="verdict ${k[mo]}"><b>AI tool: you chose ${toolName(w.tool)}. ${lab[mo][0].toUpperCase()+lab[mo].slice(1)}.</b><br>${c.toolWhy}</div>
+   <div class="card"><b>You picked ${probName(w.probQ)||'a quality dimension'} and ${probName(w.probB)||'a type of bias'}.</b> Several answers can be right here. These are the problems an expert would check first: ${c.concern}</div>
+   <p style="margin-top:12px">Points for this case: <span class="score">${pts(c,w)} / 20</span></p>
+   ${next((WB_DS[c.id]?'Test your choices on mock data in <b>Part D</b> below. Then: ':'Read Part D below. Then: ')+(n>=NEED?`you have finished ${n} cases. Select <b>Back to the cases</b>, then <b>Go to our report</b>.`:`you have finished ${n} of ${NEED} cases. Select <b>Back to the cases</b> and pick another organization.`))}
+  </div>`;
+}
+
+/* ======================= SCREEN 4: REPORT ======================= */
+function scrReport(){
+  const d=doneList(), mem=S.members.split('\n').map(s=>s.trim()).filter(Boolean), tot=d.reduce((s,c)=>s+pts(c,S.work[c.id]),0);
+  const t=new Date(), ts=t.toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'});
+  $('#app').innerHTML=`<div class="noprint">${next('When your instructor calls your team, select <b>Brief the other site</b> and pick one case to present. After the briefing, select <b>Print or save as PDF</b> (Portable Document Format). <b>Every team member</b> uploads a copy of this report to the Unit 4 AI Lab Sprint dropbox.')}
+   <div class="row"><button class="btn" id="b1">Brief the other site</button><button class="btn" id="pr">Print or save as PDF</button><button class="btn ghost" id="back">Back to the cases</button></div></div>
+  <div class="sheet">
+   <div class="kicker">Unit 4 AI Lab Sprint</div><h2>Right AI, Right Data: Team Report</h2>
+   <table><tr><th style="width:24%">Team</th><td>${esc(S.team)}</td></tr><tr><th>Site</th><td>${S.site}</td></tr>
+    <tr><th>Members</th><td>${mem.map(esc).join('<br>')}</td></tr><tr><th>Completed</th><td>${ts}</td></tr>
+    <tr><th>Points</th><td><b>${tot} / ${d.length*20}</b> across ${d.length} cases</td></tr></table>
+  </div>
+  ${d.map((c,i)=>{ const w=S.work[c.id], lab=['not a fit','accepted','best answer'];
+    return `<div class="sheet ${i?'pb':''}"><div class="kicker">${c.no} · ${c.area}</div><h3>${c.name}</h3>
+     <table><tr><th style="width:24%">The problem</th><td>${c.problem}</td></tr><tr><th>The data</th><td>${c.data}. ${c.have}</td></tr>
+      <tr><th>Our type of AI</th><td><b>${typeName(w.type)}</b> (${lab[mark(c,'type',w.type)]})</td></tr>
+      <tr><th>Why it fits the problem</th><td>${esc(w.whyType)}</td></tr>
+      <tr><th>Our AI tool</th><td><b>${toolName(w.tool)}</b> (${lab[mark(c,'tool',w.tool)]})</td></tr>
+      <tr><th>How it fits the data</th><td>${esc(w.whyTool)}</td></tr>
+      <tr><th>Quality problem to check</th><td><b>${probName(w.probQ)}</b>. ${esc(w.concern)}</td></tr>
+      <tr><th>Bias to check</th><td><b>${probName(w.probB)}</b>. ${esc(w.concernB||'')}</td></tr>
+      <tr><th>Tested on data</th><td>${w.test&&w.test.summary?esc(w.test.summary):(WB_DS[c.id]?'Not tested':'This case has no mock data to test.')}${w.test&&w.test.tries?` Runs: ${w.test.tries}. Choices that did not fit: ${w.test.blocked}.`:''}</td></tr>
+      ${WB_DS[c.id]?`<tr><th>What the result tells us</th><td>${w.test&&w.test.means?esc(w.test.means):'Not written'}</td></tr>
+      <tr><th>Benefit, and what to check first</th><td>${w.test&&w.test.benefit?esc(w.test.benefit):'Not written'}</td></tr>`:''}
+      <tr><th>Points</th><td>${pts(c,w)} / 20</td></tr></table></div>`; }).join('')}
+  <p class="counter">Report ID ${(S.site||'X')[0]}-${t.getTime().toString(36).toUpperCase()}</p>
+  <div class="row noprint"><button class="btn ghost" id="reset">Start over with a new team</button></div>`;
+  $('#pr').onclick=()=>window.print(); $('#back').onclick=()=>go(1); $('#b1').onclick=openBrief;
+  $('#reset').onclick=()=>{ if(!confirm('This clears your team\'s work from this browser. Print your report first. Continue?')) return; S={step:0,team:'',members:'',site:'',work:{},cur:null}; save(); render(); };
+}
+
+/* ======================= BRIEFING ======================= */
+function openBrief(){
+  const d=doneList();
+  const pickHTML=`<div class="kicker">Brief the other site</div><h2>Which case will you present?</h2>
+   ${next('Pick one case. Share this screen with the other site.')}
+   <div class="board">${d.map(c=>`<button class="org" data-c="${c.id}"><span class="no">${c.no}</span><h3>${c.name}</h3><span class="pill">Data: ${c.data}</span></button>`).join('')}</div>
+   <div class="row"><button class="btn ghost" id="bx">Close</button></div>`;
+  $('#briefBox').innerHTML=pickHTML; $('#brief').classList.add('show');
+  $('#bx').onclick=()=>$('#brief').classList.remove('show');
+  $$('#briefBox .org').forEach(b=>b.onclick=()=>{ const c=BY_ID[b.dataset.c], w=S.work[c.id];
+    $('#briefBox').innerHTML=`<div class="kicker">${esc(S.team)} briefs the other site · ${c.no}</div><h2>${c.name}</h2>${caseFacts(c)}
+     <div class="def"><b>Other site:</b> Which type of AI and which tool would you pick? Say your answer before this team reveals theirs.</div>
+     <div id="hid" class="blur"><table><tr><th style="width:24%">Type of AI</th><td><b>${typeName(w.type)}</b>. ${esc(w.whyType)}</td></tr><tr><th>AI tool</th><td><b>${toolName(w.tool)}</b>. ${esc(w.whyTool)}</td></tr><tr><th>Data problems to check</th><td><b>${probName(w.probQ)}</b>. ${esc(w.concern)}<br><b>${probName(w.probB)}</b>. ${esc(w.concernB||'')}</td></tr></table></div>
+     <div class="row"><button class="btn" id="rv">Reveal our answer</button><button class="btn ghost" id="bx2">Close</button></div>`;
+    $('#rv').onclick=()=>$('#hid').classList.remove('blur'); $('#bx2').onclick=()=>$('#brief').classList.remove('show'); });
+}
+
+/* ======================= PAPER VERSION ======================= */
+function printHandout(){
+  const lines=n=>Array(n).fill('<div class="lines"></div>').join('');
+  $('#handout').innerHTML=`<div class="sheet"><div class="kicker">Unit 4 AI Lab Sprint · Paper version</div><h1>Right AI, Right Data</h1>
+   <p>Team name: ____________________ Site: Yokota / Iwakuni</p><p>Members: ____________________________________________________________</p>
+   <p>Your site has five organizations. Yokota: Cases 1, 3, 5, 7, 9. Iwakuni: Cases 2, 4, 6, 8, 10. Finish at least ${NEED}. For each one, pick a type of AI and an AI tool from the lists, and write why each one fits. All of the organizations are made up.</p>
+   <h3>Types of AI</h3><table>${TYPES.map(t=>`<tr><td style="width:28%"><b>${t.name}</b></td><td>${t.d}</td></tr>`).join('')}</table>
+   <h3>AI tools</h3><table>${TOOLS.map(t=>`<tr><td style="width:28%"><b>${t.name}</b></td><td>${t.d} ${t.in}</td></tr>`).join('')}</table>
+   <h3>Data problems to check</h3><table>${PROBS.map(t=>`<tr><td style="width:28%"><b>${t.name}</b></td><td>${t.d}</td></tr>`).join('')}</table></div>`+
+   CASES.map(c=>`<div class="sheet pb"><div class="kicker">${c.no} · ${c.site} · ${c.area}</div><h2>${c.name}</h2>${caseFacts(c)}
+    <p><b>Type of AI:</b> ______________________</p><p>Why does it fit the problem? Name what the AI produces.</p>${lines(3)}
+    <p><b>AI tool:</b> ______________________</p><p>How does it fit the data? Name the kind of data and what the tool takes in.</p>${lines(3)}
+    <p><b>Quality dimension to check</b> (circle one): Accuracy · Completeness · Consistency · Timeliness · Representativeness</p><p>Why could it show up in this organization's data?</p>${lines(2)}
+    <p><b>Type of bias to check</b> (circle one): Selection · Representation · Measurement · Historical · Proxy</p><p>Why could it show up in this organization's data?</p>${lines(2)}</div>`).join('');
+  document.body.classList.add('ho'); window.print(); setTimeout(()=>document.body.classList.remove('ho'),500);
+}
+window.addEventListener('afterprint',()=>document.body.classList.remove('ho'));
+
+/* ======================= PART D: TEST IT ON DATA ======================= */
+let rs=1; const R=()=>{ rs=(rs*16807)%2147483647; return (rs-1)/2147483646; };
+const G=()=>{ let u=0,v=0; while(!u)u=R(); while(!v)v=R(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+const pk=a=>a[Math.floor(R()*a.length)];
+const sig=x=>1/(1+Math.exp(-x));
+const r1=x=>Math.round(x*10)/10;
+const pad=n=>String(n).padStart(2,'0');
+const pct=x=>Math.round(x*100)+'%';
+const fmtN=n=>Number(n).toLocaleString('en-US');
+const KIND={id:'Record number',cat:'Category',num:'Number',date:'Date',time:'Time of day',text:'Text',user:'Person ID',item:'Item ID'};
+const PAL=['--accent','--amber','--violet','--bad','--good'];
+const cssv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- mock datasets (seeded, so every laptop gets the same data) ---------- */
+function dsC1(){ rs=101; const P=['Busan','Long Beach','Singapore','Yokohama','Guam','Oakland'], C=['Carrier A','Carrier B','Carrier C','Carrier D'], SE=['Winter','Spring','Summer','Fall'], rows=[];
+ for(let i=0;i<600;i++){ const port=pk(P), car=pk(C), se=pk(SE), ds=5+Math.floor(R()*16), ch=R()<.2?'Yes':'No', wt=Math.round(Math.exp(5.5+G()*.9));
+  const late=R()<sig(-2.2+(ch==='Yes'?2.1:0)+(car==='Carrier C'?1.2:0)+(port==='Long Beach'?.8:0)+(se==='Winter'?.6:0)+.05*(ds-10));
+  rows.push({shipment_id:'S-'+(20400+i),origin_port:port,carrier:car,weight_kg:wt,days_scheduled:ds,customs_hold:ch,season:se,days_actual:late?ds+2+Math.floor(R()*8):Math.max(1,ds-Math.floor(R()*3)),arrived_late:late?'Yes':'No'}); }
+ return {rows,cols:[['shipment_id','id'],['origin_port','cat'],['carrier','cat'],['weight_kg','num'],['days_scheduled','num'],['customs_hold','cat'],['season','cat'],['days_actual','num'],['arrived_late','cat']],
+  target:'arrived_late',pos:'Yes',posName:'late shipments',say:['late','on time'],truth:['Really late','Really on time'],posWord:'arrived late',run:['class'],question:'Will this shipment arrive late?',
+  leak:{days_actual:'days_actual is how many days the shipment really took. Nobody knows that until the shipment arrives, and the chief decides each morning, before it arrives.'},
+  fit:{days_actual:'days_actual is only known after a shipment arrives. The chief needs her answer before then. The problem asks: Will this shipment arrive late?'}}; }
+
+function dsC2(){ rs=202; const rows=[], D=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'], eff=[6,-3,-1,0,1,3,8];
+ const hol=new Set(['01-01','01-02','01-03','02-11','04-29','05-03','05-04','05-05','07-04','08-13','08-14','08-15','11-23','12-25']);
+ const start=Date.UTC(2023,10,1);
+ for(let t=0;t<1096;t++){ const d=new Date(start+t*864e5), md=pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate()), dow=d.getUTCDay(), dom=d.getUTCDate();
+  const h=hol.has(md), rain=R()<.28, pay=dom===1||dom===15, temp=Math.round(16+10*Math.sin((t-170)/365*2*Math.PI)+G()*2.5);
+  const kg=Math.max(4,18+.008*t+eff[dow]+(pay?5:0)+(h?7:0)-(rain?3:0)-.12*Math.abs(temp-18)+G()*2.2);
+  rows.push({date:d.toISOString().slice(0,10),day_of_week:D[dow],holiday:h?'Yes':'No',rain:rain?'Yes':'No',base_payday:pay?'Yes':'No',temp_c:temp,kg_sold:r1(kg)}); }
+ return {rows,cols:[['date','date'],['day_of_week','cat'],['holiday','cat'],['rain','cat'],['base_payday','cat'],['temp_c','num'],['kg_sold','num']],
+  target:'kg_sold',timeCol:'date',unit:'kg',run:['fore','reg'],question:'How many kilograms of coffee will we sell next week?'}; }
+
+function dsC3(){ rs=303; const rows=[];
+ const PH=['Your mailbox is full. Click to keep your account','Verify your account within 24 hours','Payroll update required. Confirm your bank details','Unusual sign-in detected. Reset your password now','Invoice overdue. Pay now to avoid a penalty','Your password expires today','A package is waiting. Confirm your address','Security alert: confirm your login','Final notice: your account is suspended','Meeting minutes attached. Sign in to view'];
+ const SF=['Minutes from Tuesday contract review','Updated duty roster for next week','Lunch order for Friday','Q3 budget draft attached','Reminder: safety briefing at 0900','Password policy update from IT','Contract review schedule','Training slides from the cyber course','New badge pickup times','Invoice 4471 approved for payment'];
+ for(let i=0;i<400;i++){ const ph=R()<.35, subj=ph?(R()<.25?pk(SF):pk(PH)):(R()<.06?pk(PH):pk(SF));
+  const dom=ph?(R()<.6?pk(['shieldp0int-secure.com','mail-verify.net','account-alerts.co','secure-login.info']):'partner-co.com'):(R()<.62?'shieldpoint.com':pk(['partner-co.com','navsup-contract.com']));
+  rows.push({email_id:'E-'+(5000+i),sender_domain:dom,subject:subj,has_link:(ph?R()<.9:R()<.3)?'Yes':'No',blocked_by_analyst:(ph?R()<.97:R()<.02)?'Yes':'No',label:ph?'phishing':'safe'}); }
+ return {rows,cols:[['email_id','id'],['sender_domain','cat'],['subject','text'],['has_link','cat'],['blocked_by_analyst','cat'],['label','cat']],
+  target:'label',pos:'phishing',posName:'phishing emails',say:['phishing','safe'],truth:['Really phishing','Really safe'],posWord:'were phishing',run:['class'],question:'Is this email phishing or safe?',
+  leak:{blocked_by_analyst:'blocked_by_analyst records what the analyst did after reading the email. When a new email arrives, nobody has decided yet.'},
+  sentMsg:'Sentiment analysis judges tone. Phishing emails are often calm and polite, and safe emails can sound urgent. Tone does not answer the analyst\'s question: phishing or safe? <b>What to change:</b> in step 3, pick a type of AI that learns from the analysts\' labels.'}; }
+
+function dsC4(){ rs=404; const rows=[];
+ const RO=[['Office staff',.58,['Main lobby','Office floor 2','Office floor 3','Break room'],[7,19]],['Cleaning staff',.1,['Main lobby','Office floor 2','Office floor 3','Restrooms','Break room'],[18,24]],['Security',.08,['Main lobby','Loading dock','Mechanical room','Office floor 2','Server room'],[0,24]],['IT staff',.07,['Server room','Office floor 3','Main lobby'],[8,18]],['Maintenance',.12,['Loading dock','Mechanical room','Main lobby'],[6,16]],['Visitor',.05,['Main lobby','Office floor 2'],[9,17]]];
+ const badges=[]; for(let i=0;i<320;i++){ let x=R(),k=0; while(k<RO.length-1&&x>RO[k][1]){ x-=RO[k][1]; k++; } badges.push(['B-'+String(100+i*3).padStart(4,'0'),k]); }
+ const WD=['Monday','Tuesday','Wednesday','Thursday','Friday'], WE=['Saturday','Sunday'];
+ for(let i=0;i<3000;i++){ const [bid,k]=pk(badges), r=RO[k], h=r[3][0]+Math.floor(R()*(r[3][1]-r[3][0]));
+  rows.push({swipe_id:'W-'+(70000+i),badge_id:bid,role:r[0],building:String(1+Math.floor(R()*30)),door:pk(r[2]),time:pad(h)+':'+pad(Math.floor(R()*60)),day:R()<(r[0]==='Security'?.7:.93)?pk(WD):pk(WE),access_granted:R()<(r[0]==='Visitor'?.85:.99)?'Yes':'No'}); }
+ const INC=[['B-0381','Cleaning staff','12','Server room','02:14','Sunday','Yes'],['B-0381','Cleaning staff','12','Server room','02:51','Sunday','Yes'],['B-0742','Visitor','7','Mechanical room','23:40','Saturday','No'],['B-0217','Office staff','3','Loading dock','03:05','Tuesday','Yes'],['B-0556','Maintenance','12','Server room','01:30','Thursday','Yes'],['B-0742','Visitor','12','Server room','22:10','Saturday','No'],['B-0907','Cleaning staff','5','Server room','04:22','Wednesday','Yes'],['B-0333','Office staff','12','Server room','00:47','Sunday','Yes']];
+ INC.forEach((x,j)=>rows.splice(Math.floor(R()*rows.length),0,{swipe_id:'W-'+(73000+j),badge_id:x[0],role:x[1],building:x[2],door:x[3],time:x[4],day:x[5],access_granted:x[6],_inc:true}));
+ return {rows,cols:[['swipe_id','id'],['badge_id','id'],['role','cat'],['building','cat'],['door','cat'],['time','time'],['day','cat'],['access_granted','cat']],
+  target:null,run:['anom','clus'],question:'Which of last night\'s swipes do not fit the usual pattern?',
+  hint:(ins)=>{ const has=n=>ins.includes(n), add=['time','door'].filter(n=>!has(n));
+   return (has('role')?'Keep role in step 2. You are right to use it: the model learns when and where each role normally swipes, so it can spot a cleaning badge at the server room at 2 a.m.':'In step 2, check role, so the model can learn when and where each role normally swipes.')+(add.length?` Also check ${add.join(' and ')}, so the model can see ${add.length>1?'when and where':add[0]==='time'?'when':'where'} each swipe happened.`:''); }}; }
+
+function dsC6(){ rs=606; const rows=[], S6=[[.35,[19,26],[300,2500],[3,6],.95,[0,2],[0,4]],[.28,[28,42],[2000,9000],[2,3],.85,[1,3],[3,12]],[.2,[52,72],[15000,40000],[0,1],.2,[0,1],[10,30]],[.17,[33,50],[9000,22000],[2,4],.7,[0,1],[5,15]]];
+ for(let i=0;i<900;i++){ let x=R(),k=0; while(k<3&&x>S6[k][0]){ x-=S6[k][0]; k++; } const s=S6[k], u=a=>a[0]+R()*(a[1]-a[0]), age=Math.round(u(s[1]));
+  rows.push({member_id:'M-'+(1000+i),age,avg_balance_usd:Math.round(u(s[2])/10)*10,deposits_per_month:Math.round(u(s[3])),uses_mobile_app:R()<s[4]?'Yes':'No',loans_open:Math.round(u(s[5])),years_member:Math.min(age-17,Math.round(u(s[6])))}); }
+ return {rows,cols:[['member_id','id'],['age','num'],['avg_balance_usd','num'],['deposits_per_month','num'],['uses_mobile_app','cat'],['loans_open','num'],['years_member','num']],
+  target:null,run:['clus'],question:'What kinds of members does the credit union have?'}; }
+
+function dsC7(){ rs=707; const rows=[], mk=(p,lv)=>lv.flatMap(l=>[1,2,3,4].map(n=>`${p}-${l}-0${n}`));
+ const T={JP:mk('JP',['A1','A2','B1']),EN:mk('EN',['A2','B1','B2'])};
+ for(let l=0;l<300;l++){ const seq=T[R()<.55?'JP':'EN']; let pos=Math.floor(R()*3), d=Date.UTC(2026,5,1+Math.floor(R()*60)); const n=4+Math.floor(R()*7);
+  for(let j=0;j<n&&pos<seq.length;j++){ const done=R()<.88;
+   rows.push({learner_id:'L-'+String(200+l).padStart(4,'0'),lesson_id:seq[pos],date:new Date(d).toISOString().slice(0,10),completed:done?'Yes':'No',quiz_score:done?Math.round(Math.min(100,60+R()*40)):''});
+   d+= (2+Math.floor(R()*6))*864e5; pos+= R()<.8?1:(R()<.5?2:0); } }
+ return {rows,cols:[['learner_id','user'],['lesson_id','item'],['date','date'],['completed','cat'],['quiz_score','num']],
+  target:'lesson_id',userCol:'learner_id',itemCol:'lesson_id',run:['rec'],question:'Which lesson should each learner take next?'}; }
+
+function dsC8(){ rs=808; const rows=[];
+ const POS=['Finally! Delivery trucks can get through in the morning again.','I support this rule. The street is safer for kids now.','Good decision. Thank you to the city.','Glad something is being done about night parking.','この規則に賛成です。','This helps the bus get through. Good plan.'];
+ const NEG=['This rule punishes families who have nowhere else to park.','Unfair. Base housing has too few spaces already.','Terrible idea. Where are night shift workers supposed to park?','I am against this. It will make parking worse.','駐車場がなくて困ります。','The fines are too high and the signs are unclear. Bad plan.'];
+ const NEU=['When does the rule start, and which streets does it cover?','Will there be a permit for residents?','Please post the map in English and Japanese.','いつから始まりますか？','What hours does the rule apply?'];
+ const SAR=['Great, another rule. Just what we needed.','Wonderful. Now I can walk 2 km from my car every night.'];
+ const NB=['Kawashimo','Monzen','Nishiki','Asahi'];
+ for(let i=0;i<300;i++){ const x=R(); let t,txt; if(x<.36){t='positive';txt=pk(POS);} else if(x<.74){t='negative';txt=pk(NEG);} else if(x<.94){t='neutral';txt=pk(NEU);} else {t='negative';txt=pk(SAR);}
+  rows.push({comment_id:'C-'+(300+i),neighborhood:pk(NB),language:/[ぁ-んァ-ン一-龥]/.test(txt)?'Japanese':'English',comment:txt,_tone:t}); }
+ return {rows,cols:[['comment_id','id'],['neighborhood','cat'],['language','cat'],['comment','text']],target:null,run:['sent'],question:'Is each comment positive, negative, or neutral?'}; }
+
+const WB_DS={c1:dsC1,c2:dsC2,c3:dsC3,c4:dsC4,c6:dsC6,c7:dsC7,c8:dsC8};
+const NO_WB={
+ c5:'Part D runs on tables and text. This case\'s data is photos, so it needs an image tool such as Rekognition Custom Labels, Vertex AI AutoML, or Google Teachable Machine. Teachable Machine is free in a web browser: you can train it on a few photos of your own in a few minutes.',
+ c9:'Part D runs on records of the past. This case has no records: the robot learns by trial and error inside a simulation that awards points. That takes a simulation and code, so Part D cannot run it.',
+ c10:'Part D runs on tables and text. This case\'s data is audio recordings, so it needs a speech tool such as Amazon Transcribe or Google Cloud Speech-to-Text.'};
+const DSC={}; const getDS=id=>DSC[id]||(DSC[id]=WB_DS[id]());
+const kindOf=(ds,n)=>(ds.cols.find(x=>x[0]===n)||[])[1];
+function shuffled(a,seed=999){ rs=seed; const b=a.slice(); for(let i=b.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+
+/* ---------- the checks: return a message when a choice does not fit, or null ---------- */
+function check(c,ds,out,ins,type){
+ const who=c.who.replace(/^The /,'the '), tn=typeName(type), kind=n=>kindOf(ds,n);
+ const vals=n=>[...new Set(ds.rows.map(r=>r[n]))].slice(0,4).join(' or ');
+ const kindWord=ds.cols.some(x=>x[1]==='text')?'text and categories':'a table of records';
+ if(type==='gen') return GEN_WHY+' <b>What to change:</b> in step 3, pick a different type of AI.';
+ if(type==='od') return `Object detection finds things inside images and draws a box around each one. This data is ${kindWord}, not images. <b>What to change:</b> in step 3, pick a type of AI that works on this kind of data.`;
+ if(type==='speech') return 'Speech recognition turns spoken words in audio into text. This data has no audio. <b>What to change:</b> in step 3, pick a type of AI that works on this kind of data.';
+ if(type==='rl') return 'Reinforcement learning learns by trial and error inside a simulation that awards points. This data is a record of the past, not a simulation. <b>What to change:</b> in step 3, pick a type of AI that learns from records.';
+ if(!ins.length) return 'The model needs information to work from. <b>What to change:</b> in step 2, check at least one input variable.';
+ const ids=ins.filter(n=>kind(n)==='id');
+ if(ids.length) return `${ids.join(' and ')} ${ids.length>1?'are record numbers':'is a record number'}. A record number names a row but tells the model nothing about it. <b>What to change:</b> in step 2, uncheck it.`;
+ if(type==='sent'){
+  if(!ds.cols.some(x=>x[1]==='text')) return 'Sentiment analysis reads text to judge its tone. This data has no text column.';
+  if(ds.sentMsg) return ds.sentMsg;
+  if(out) return 'This sentiment tool uses a model already trained on tone, so it needs no output variable and no labels. <b>What to change:</b> in step 1, pick <b>Nothing to predict</b>.';
+  if(!ins.some(n=>kind(n)==='text')) return `Sentiment analysis reads text. <b>What to change:</b> in step 2, check the text column, ${ds.cols.find(x=>x[1]==='text')[0]}.`;
+  return null; }
+ if(type==='clus'||type==='anom'){
+  if(out){ let m=`${tn} does not predict a column. It ${type==='anom'?'learns what normal records look like and flags the ones that do not fit':'sorts the records into groups of similar ones'}, so nothing goes in step 1. <b>What to change:</b> in step 1, pick <b>Nothing to predict</b>.`;
+   if(ds.hint) m+=' '+ds.hint(ins,type); return m; }
+  if(ds.target) return `${tn} ignores answers this data already has. Every past record has ${ds.target}, which answers the question "${ds.question}" <b>What to change:</b> in step 1, pick ${ds.target}, and pick a type of AI that learns from it.`;
+  if(!ds.run.includes(type)) return `${tn} can run on this data, but it does not answer the problem: ${ds.question} <b>What to change:</b> read the problem again and pick a different type of AI.`;
+  if(ins.every(n=>kind(n)==='text')) return `${tn} in Part D works on categories and numbers, not free text. <b>What to change:</b> in step 2, check other input variables.`;
+  return null; }
+ if(type==='rec'){
+  if(!ds.userCol) return 'Recommendation needs records of which person used which item. This data has no such records.';
+  if(out!==ds.itemCol) return `Recommendation suggests items. <b>What to change:</b> in step 1, pick the item column, ${ds.itemCol}. It is what the AI suggests.`;
+  if(!ins.includes(ds.userCol)) return `Recommendation needs to know who did what. <b>What to change:</b> in step 2, check ${ds.userCol}.`;
+  return null; }
+ /* classification, regression, forecasting */
+ if(!out) return ds.target
+  ? `${tn} learns from an output variable: the column that holds the answer for every past record. <b>What to change:</b> in step 1, pick the column that answers the question "${ds.question}"`
+  : `${tn} learns to predict a column, but this data has no column that answers the problem: ${ds.question} <b>What to change:</b> keep <b>Nothing to predict</b> in step 1, and in step 3 pick a type of AI that needs no answer column, such as clustering, anomaly detection, or sentiment analysis.`;
+ const k=kind(out);
+ if(type==='class'){
+  if(k==='num') return `Classification predicts a category. ${out} is a number. <b>What to change:</b> in step 3, pick regression, or in step 1 pick a column that is a category.`;
+  if(k==='text') return `${out} is free text. Almost every value is different, so it is not a category to predict. <b>What to change:</b> in step 1, pick a column that is a category.`;
+  if(k==='date'||k==='time') return `${out} is a ${k==='date'?'date':'time of day'}, not a category to predict. <b>What to change:</b> in step 1, pick a column that is a category.`;
+  if(k==='id') return `${out} is a record number. Every row has a different one, so there is nothing to learn. <b>What to change:</b> in step 1, pick a different column.`; }
+ if(type==='reg'||type==='fore'){
+  if(k!=='num') return `${tn} predicts a number. ${out} is ${k==='cat'?'a category ('+vals(out)+')':'a '+KIND[k].toLowerCase()}. <b>What to change:</b> in step 3, pick classification, or in step 1 pick a column that is a number.`;
+  if(type==='fore'&&!ds.timeCol) return 'Time-series forecasting predicts a number from its past values over time. This data has no date column, so there is no order in time to learn from. <b>What to change:</b> in step 3, pick a different type of AI.'; }
+ if(!ds.target) return `${out} is not what ${who} needs to know, and this data has no column that answers the problem: ${ds.question} <b>What to change:</b> in step 1, pick <b>Nothing to predict</b>, and in step 3 pick a type of AI that needs no answer column, such as clustering, anomaly detection, or sentiment analysis.`+(ds.hint?' '+ds.hint(ins,type):'');
+ if(out!==ds.target) return ((ds.fit&&ds.fit[out])||`${out} is not what ${who} needs to know. The problem asks: ${ds.question}`)+` <b>What to change:</b> in step 1, pick the column that answers that question.`;
+ if(!ds.run.includes(type)) return `${tn} can predict ${out}, but it does not fit this problem: ${ds.question} <b>What to change:</b> think about what kind of answer that question needs, and pick a different type of AI in step 3.`;
+ return null;
+}
+
+/* ---------- charts: each one shows what its type of AI does ---------- */
+/* Colors --c1..--c5 passed the color-vision and contrast checks in light and dark. --c0 is a neutral gray. */
+const CH=['--c1','--c2','--c3','--c4','--c5'];
+const sv=(W,H,inner,label)=>`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(label)}">${inner}</svg>`;
+const tt=t=>`<title>${esc(t)}</title>`;
+const legend=items=>`<div class="lg">${items.map(([c,t,shape])=>`<span><i class="${shape||''}" style="background:var(${c})"></i>${t}</span>`).join('')}</div>`;
+const chartBox=(title,body,note)=>`<div class="chartbox"><div class="ct">${title}</div>${body}${note?`<p class="counter" style="margin:6px 0 0">${note}</p>`:''}</div>`;
+
+/* CLASSIFICATION: every test record is a square, sorted into the model's piles */
+function piles(groups,label){
+ const per=15, s=12, gp=2, pw=per*(s+gp), W=groups.length*pw+(groups.length-1)*40+20;
+ const rows=Math.max(...groups.map(g=>Math.ceil(g.items.length/per))), H=rows*(s+gp)+56;
+ let g='';
+ groups.forEach((gr,k)=>{ const x0=10+k*(pw+40);
+  g+=`<text x="${x0}" y="16" class="tx b">${esc(gr.label)} (${gr.items.length})</text>`;
+  gr.items.forEach((it,i)=>{ const x=x0+(i%per)*(s+gp), y=28+Math.floor(i/per)*(s+gp);
+   g+=`<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="2" fill="var(${it.c})">${tt(it.t)}</rect>`; }); });
+ return sv(W,H,g,label);
+}
+
+/* REGRESSION and FORECASTING */
+function lines(series,label,xl,yl,fmtX=x=>x){
+ const W=640,H=240,L=58,R=14,T=14,B=34, xs=series.flatMap(s=>s.pts.map(p=>p[0])), ys=series.flatMap(s=>s.pts.map(p=>p[1]));
+ const x0=Math.min(...xs),x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys), pad=(y1-y0)*.08||1, lo=y0-pad, hi=y1+pad;
+ const px=x=>L+(x-x0)/(x1-x0||1)*(W-L-R), py=y=>H-B-(y-lo)/(hi-lo)*(H-B-T);
+ let g=`<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" class="ax"/><text x="14" y="${(T+H-B)/2}" text-anchor="middle" class="tx s" transform="rotate(-90 14 ${(T+H-B)/2})">${esc(yl)}</text>`;
+ [lo+(hi-lo)*.15,(lo+hi)/2,hi-(hi-lo)*.15].forEach(v=>g+=`<line x1="${L}" y1="${py(v).toFixed(1)}" x2="${W-R}" y2="${py(v).toFixed(1)}" class="grid"/><text x="${L-6}" y="${(py(v)+4).toFixed(1)}" text-anchor="end" class="tx s">${Math.round(v)}</text>`);
+ g+=`<text x="${L}" y="${H-8}" class="tx s">${esc(String(fmtX(x0)))}</text><text x="${W-R}" y="${H-8}" text-anchor="end" class="tx s">${esc(String(fmtX(x1)))}</text><text x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle" class="tx s">${esc(xl)}</text>`;
+ series.forEach(s=>{ g+=`<path d="${s.pts.map((p,i)=>`${i?'L':'M'}${px(p[0]).toFixed(1)},${py(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(${s.c})" stroke-width="2" stroke-linejoin="round" ${s.dash?'stroke-dasharray="5 4"':''}/>`;
+  s.pts.forEach(p=>g+=`<circle cx="${px(p[0]).toFixed(1)}" cy="${py(p[1]).toFixed(1)}" r="6" fill="transparent">${tt(`${s.name}: ${fmtX(p[0])}, ${r1(p[1])} ${yl}`)}</circle>`); });
+ return sv(W,H,g,label);
+}
+function scatter(pts,label,xl,yl,o={}){
+ const W=560,H=330,L=60,R=14,T=14,B=40, xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+ let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys); if(o.diag){ x0=y0=Math.min(x0,y0); x1=y1=Math.max(x1,y1); }
+ const px=x=>L+(x-x0)/(x1-x0||1)*(W-L-R), py=y=>H-B-(y-y0)/(y1-y0||1)*(H-B-T), f=o.fmt||(v=>fmtN(Math.round(v)));
+ let g=`<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" class="ax"/><line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" class="ax"/>
+  <text x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle" class="tx s">${esc(xl)}</text><text x="14" y="${(T+H-B)/2}" text-anchor="middle" class="tx s" transform="rotate(-90 14 ${(T+H-B)/2})">${esc(yl)}</text>
+  <text x="${L}" y="${H-B+15}" class="tx s">${f(x0)}</text><text x="${W-R}" y="${H-B+15}" text-anchor="end" class="tx s">${f(x1)}</text>
+  <text x="${L-6}" y="${H-B}" text-anchor="end" class="tx s">${f(y0)}</text><text x="${L-6}" y="${T+8}" text-anchor="end" class="tx s">${f(y1)}</text>`;
+ if(o.diag) g+=`<line x1="${px(x0)}" y1="${py(y0)}" x2="${px(x1)}" y2="${py(y1)}" class="ref"><title>A perfect prediction lands on this line</title></line>`;
+ pts.forEach(p=>g+=`<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="${p.r||3.4}" fill="var(${p.c})" fill-opacity="${p.op||.8}" stroke="var(--paper)" stroke-width="1">${tt(p.t)}</circle>`);
+ (o.centers||[]).forEach(cn=>g+=`<g><circle cx="${px(cn.x).toFixed(1)}" cy="${py(cn.y).toFixed(1)}" r="11" fill="var(--paper)" stroke="var(${cn.c})" stroke-width="3"/><text x="${px(cn.x).toFixed(1)}" y="${(py(cn.y)+4).toFixed(1)}" text-anchor="middle" class="tx b">${cn.n}</text>${tt('Center of group '+cn.n)}</g>`);
+ return sv(W,H,g,label);
+}
+
+/* time of day across, one row per door: used for anomaly detection and for clustering the swipes */
+function doorClock(rows,label,colorOf,sizeOf,tip,ringOf){
+ const doors=[...new Set(rows.map(r=>r.door))].sort(), W=660, L=118, RM=12, T=10, rh=30, B=34, H=T+doors.length*rh+B;
+ const px=h=>L+h/24*(W-L-RM), hr=r=>parseInt(r.time)+parseInt(r.time.slice(3))/60;
+ rs=77; let g='';
+ doors.forEach((d,i)=>{ const y=T+i*rh; g+=`<line x1="${L}" y1="${y+rh}" x2="${W-RM}" y2="${y+rh}" class="grid"/><text x="${L-8}" y="${y+rh/2+4}" text-anchor="end" class="tx">${esc(d)}</text>`; });
+ [0,6,12,18,24].forEach(h=>g+=`<text x="${px(h)}" y="${H-14}" text-anchor="${h===0?'start':h===24?'end':'middle'}" class="tx s">${h===0||h===24?'midnight':h===12?'noon':h<12?h+' a.m.':(h-12)+' p.m.'}</text>`);
+ g+=`<text x="${(L+W-RM)/2}" y="${H-1}" text-anchor="middle" class="tx s">time of the swipe</text>`;
+ const order=rows.slice().sort((a,b)=>sizeOf(a)-sizeOf(b));
+ order.forEach(r=>{ const y=T+doors.indexOf(r.door)*rh+5+R()*(rh-10), z=sizeOf(r);
+  g+=`<circle cx="${px(hr(r)).toFixed(1)}" cy="${y.toFixed(1)}" r="${z}" fill="var(${colorOf(r)})" fill-opacity="${z>3?1:.55}" ${z>3?'stroke="var(--paper)" stroke-width="1.5"':''}>${z>3?tt(tip(r)):''}</circle>`;
+  if(ringOf&&ringOf(r)) g+=`<circle cx="${px(hr(r)).toFixed(1)}" cy="${y.toFixed(1)}" r="${z+4}" fill="none" stroke="var(--c2)" stroke-width="2.5">${tt(tip(r))}</circle>`; });
+ return sv(W,H,g,label);
+}
+
+/* horizontal stacked bars: rows=[{label,segs:[{v,c,lab,dark}]}] */
+function hstack(rows,label){
+ const W=640, L=110, R=16, bh=30, gap=14, H=rows.length*(bh+gap)+6, max=Math.max(...rows.map(r=>r.segs.reduce((s,x)=>s+x.v,0)));
+ const sc=v=>v/max*(W-L-R); let y=4, g='';
+ rows.forEach(r=>{ let x=L; g+=`<text x="${L-8}" y="${y+bh/2+4}" text-anchor="end" class="tx">${esc(r.label)}</text>`;
+  r.segs.forEach(s=>{ const w=sc(s.v); if(w<=0) return; g+=`<rect x="${x.toFixed(1)}" y="${y}" width="${Math.max(1,w-2).toFixed(1)}" height="${bh}" rx="4" fill="var(${s.c})">${tt(s.lab+': '+fmtN(s.v))}</rect>`;
+   if(w>34) g+=`<text x="${(x+w/2-1).toFixed(1)}" y="${y+bh/2+4}" text-anchor="middle" class="tx ${s.dark?'b':'on'}">${fmtN(s.v)}</text>`; x+=w; });
+  y+=bh+gap; });
+ return sv(W,H,g,label);
+}
+/* vertical bars: items=[{label,v,c,txt}] */
+function vbars(items,label,opt={}){
+ const W=Math.max(560,items.length*110), H=230, B=40, T=26, L=16, n=items.length, slot=(W-L*2)/n, bw=Math.min(80,slot*.6), max=opt.max||Math.max(...items.map(i=>i.v))||1;
+ let g=`<line x1="${L}" y1="${H-B}" x2="${W-L}" y2="${H-B}" class="ax"/>`;
+ items.forEach((it,i)=>{ const h=(it.v/max)*(H-B-T), x=L+slot*i+(slot-bw)/2, y=H-B-h;
+  g+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" rx="4" fill="var(${it.c})">${tt(it.label+': '+(it.txt||fmtN(it.v)))}</rect>
+   <text x="${(x+bw/2).toFixed(1)}" y="${(y-8).toFixed(1)}" text-anchor="middle" class="tx b">${it.txt||fmtN(it.v)}</text>
+   <text x="${(x+bw/2).toFixed(1)}" y="${H-B+18}" text-anchor="middle" class="tx">${esc(it.label)}</text>`; });
+ return sv(W,H,g,label);
+}
+
+/* charts for the cases with no mock data: made-up numbers that show what the type of AI does */
+const NO_WB_CHART={
+ c5:()=>{ const say=[], no=[]; for(let i=0;i<6;i++) say.push({c:i<4?'--c2':'--c0',t:i<4?'Really cracked':'Not cracked'}); for(let i=0;i<94;i++) no.push({c:i<1?'--c2':'--c0',t:i<1?'Really cracked: missed':'Not cracked'});
+  return chartBox('Classification: how a crack model sorts 100 photos',legend([['--c2','Really cracked'],['--c0','Not cracked']])+piles([{label:'Model says cracked',items:say},{label:'Model says not cracked',items:no}],'Two piles of photo squares sorted by the model'),'Made-up numbers that show the idea. Each square is one blade photo. The model sorts every photo into one of two piles, and the colors show what was really true. It caught 4 of 5 cracked blades, flagged 2 good blades, and missed 1 crack.'); },
+ c9:()=>{ const pts=[]; for(let k=0;k<=50;k+=2.5) pts.push([k,37+51*Math.exp(-k/11)]); return chartBox('Reinforcement learning: the robot improves by trial and error',lines([{c:'--c1',name:'Average delivery time',pts}],'Line chart: delivery time falls from 88 to about 37 seconds over 50,000 tries','tries in the simulation','average delivery time (seconds)',x=>x===0?'start':x+',000'),'Made-up numbers that match the case. Each try earns or loses points. Over 50,000 tries in the simulation, the robot keeps what earns points, and its average delivery time falls from 88 seconds to about 37.'); },
+ c10:()=>chartBox('Speech recognition: share of words written down correctly',vbars([{label:'Quiet call',v:96,c:'--c1',txt:'96%'},{label:'Noisy call',v:83,c:'--c3',txt:'83%'},{label:'Model numbers',v:71,c:'--c5',txt:'71%'}],'Bar chart: 96 percent of words right on quiet calls, 83 on noisy calls, 71 for router model numbers',{max:100}),'Made-up numbers that show the idea. Speech recognition turns spoken words into text. It does best on quiet calls and worst on noisy calls and unusual words such as router model numbers, so a supervisor should spot-check transcripts.')};
+
+/* ---------- models ---------- */
+const concl=items=>`<div class="card concl" style="display:none"><b>What an analyst would conclude</b><ul>${items.filter(Boolean).map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+function tree(rows,feats,y,depth,pos){
+ const gini=a=>{ if(!a.length) return 0; const c={}; a.forEach(r=>c[r[y]]=(c[r[y]]||0)+1); return 1-Object.values(c).reduce((s,v)=>s+(v/a.length)**2,0); };
+ const maj=a=>{ const c={}; a.forEach(r=>c[r[y]]=(c[r[y]]||0)+1); return Object.keys(c).sort((p,q)=>c[q]-c[p])[0]; };
+ const num=(r,f)=>f.time?parseInt(r[f.n]):+r[f.n];
+ function grow(a,d,path){ const node={pred:maj(a),n:a.length,rate:a.filter(r=>r[y]===pos).length/a.length,path};
+  if(d===0||a.length<30||gini(a)===0) return node;
+  let best=null; const g0=gini(a);
+  feats.forEach(f=>{ let tests;
+   if(f.k==='num'){ const v=a.map(r=>num(r,f)).filter(x=>!isNaN(x)).sort((p,q)=>p-q);
+    tests=[...new Set([.2,.4,.6,.8].map(q=>v[Math.floor(q*v.length)]))].map(t=>({fn:r=>num(r,f)>t,yes:`${f.n} above ${t}`,no:`${f.n} ${t} or below`})); }
+   else tests=[...new Set(a.map(r=>r[f.n]))].map(v=>({fn:r=>r[f.n]===v,yes:`${f.n} is ${v}`,no:`${f.n} is not ${v}`}));
+   tests.forEach(t=>{ const L=a.filter(t.fn), Rr=a.filter(r=>!t.fn(r)); if(L.length<15||Rr.length<15) return;
+    const g=g0-(L.length*gini(L)+Rr.length*gini(Rr))/a.length; if(!best||g>best.g) best={...t,g,L,R:Rr}; }); });
+  if(!best||best.g<1e-4) return node;
+  node.test=best; node.yesN=grow(best.L,d-1,path.concat(best.yes)); node.noN=grow(best.R,d-1,path.concat(best.no)); delete best.L; delete best.R; return node; }
+ return grow(rows,depth,[]);
+}
+const predTree=(n,r)=>n.test?predTree(n.test.fn(r)?n.yesN:n.noN,r):n.pred;
+const leaves=n=>n.test?leaves(n.yesN).concat(leaves(n.noN)):[n];
+
+function nbTrain(rows,ins,y,ds){
+ const toks=r=>ins.flatMap(n=>kindOf(ds,n)==='text'?String(r[n]).toLowerCase().match(/[a-z0-9]{3,}/g)||[]:[n+'='+r[n]]);
+ const cls={}, cnt={}, tot={}, V=new Set();
+ rows.forEach(r=>{ const c=r[y]; cls[c]=(cls[c]||0)+1; cnt[c]=cnt[c]||{}; toks(r).forEach(t=>{ cnt[c][t]=(cnt[c][t]||0)+1; tot[c]=(tot[c]||0)+1; V.add(t); }); });
+ const pred=r=>{ let best=null,bs=-1e9; Object.keys(cls).forEach(c=>{ let s=Math.log(cls[c]/rows.length); toks(r).forEach(t=>s+=Math.log(((cnt[c][t]||0)+1)/(tot[c]+V.size))); if(s>bs){bs=s;best=c;} }); return best; };
+ return {pred,cnt,tot,V};
+}
+
+function runClass(c,ds,out,ins){
+ const sh=shuffled(ds.rows), cut=Math.floor(sh.length*.7), tr=sh.slice(0,cut), te=sh.slice(cut), pos=ds.pos;
+ let predict, extra='';
+ if(ins.some(n=>kindOf(ds,n)==='text')){
+  const m=nbTrain(tr,ins,out,ds); predict=m.pred;
+  const neg=Object.keys(m.cnt).find(k=>k!==pos);
+  const words=[...m.V].filter(t=>!t.includes('=')&&(m.cnt[pos][t]||0)>=5).map(t=>[t,Math.log(((m.cnt[pos][t]||0)+1)/(m.tot[pos]+m.V.size))-Math.log(((m.cnt[neg][t]||0)+1)/(m.tot[neg]+m.V.size))]).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+  extra=`<p><b>Words that most often marked ${ds.posName}:</b> ${words.join(', ')||'none found'}</p>`;
+ } else {
+  const t=tree(tr,ins.map(n=>({n,k:['num','time'].includes(kindOf(ds,n))?'num':'cat',time:kindOf(ds,n)==='time'})),out,3,pos); predict=r=>predTree(t,r);
+  const L=leaves(t).filter(l=>l.n>=15&&l.path.length).sort((a,b)=>b.rate-a.rate).slice(0,3);
+  extra=L.length?`<p><b>What the model learned (its three riskiest groups):</b></p><ul>${L.map(l=>`<li>If ${l.path.join(' and ')}: ${pct(l.rate)} ${ds.posWord} (${l.n} training records)</li>`).join('')}</ul>`:'';
+ }
+ const base=tr.filter(r=>r[out]!==pos).length>=tr.length/2?Object.keys(tr.reduce((o,r)=>(o[r[out]]=1,o),{})).find(k=>k!==pos):pos;
+ let right=0,caught=0,P=0,fa=0; te.forEach(r=>{ const p=predict(r); if(p===r[out]) right++; if(r[out]===pos){ P++; if(p===pos) caught++; } else if(p===pos) fa++; });
+ const baseAcc=te.filter(r=>r[out]===base).length/te.length, acc=right/te.length;
+ const lk=ins.find(n=>ds.leak&&ds.leak[n]);
+ const item=r=>({c:r[out]===pos?'--c2':'--c0',t:`${r[Object.keys(r)[0]]}: ${r[out]===pos?ds.truth[0]:ds.truth[1]}`}), srt=a=>a.sort((x,y)=>(y[out]===pos)-(x[out]===pos));
+ const pileY=srt(te.filter(r=>predict(r)===pos)).map(item), pileN=srt(te.filter(r=>predict(r)!==pos)).map(item);
+ const chart=chartBox(`Classification: how the model sorted the ${te.length} test records`,legend([['--c2',ds.truth[0]],['--c0',ds.truth[1]]])+piles([{label:`Model says ${ds.say[0]}`,items:pileY},{label:`Model says ${ds.say[1]}`,items:pileN}],'Two piles of squares: the records the model put in each category'),`Each square is one record the model never saw. The model put every one into one of two piles. Orange squares in the "${ds.say[0]}" pile were caught. Orange squares in the "${ds.say[1]}" pile were missed. Gray squares in the "${ds.say[0]}" pile are false alarms.`);
+ const html=`<div class="verdict best"><b>The model ran.</b> It learned from ${fmtN(tr.length)} records and was tested on ${fmtN(te.length)} records it never saw.</div>
+  <div class="stats"><div class="card"><div class="muted">Accuracy</div><div class="score">${pct(acc)}</div><div class="counter">A model that always says "${base}" scores ${pct(baseAcc)}.</div></div>
+  <div class="card"><div class="muted">${ds.posName[0].toUpperCase()+ds.posName.slice(1)} caught</div><div class="score">${caught} of ${P}</div><div class="counter">The ones the ${c.who.replace(/^The /,'').toLowerCase()} most needs to find.</div></div>
+  <div class="card"><div class="muted">False alarms</div><div class="score">${fa}</div><div class="counter">Flagged as ${pos}, but were not.</div></div></div>${chart}${extra}
+  ${concl([`Accuracy alone can fool you. ${pct(acc)} sounds good, but a model that always says "${base}" scores ${pct(baseAcc)}. The number that matters to the ${c.who.replace(/^The /,'').toLowerCase()} is how many ${ds.posName} it caught: ${caught} of ${P}.`,`The model missed ${P-caught} ${ds.posName} and raised ${fa} false alarms. Ask whether that is good enough to act on, and which mistake costs more: a miss or a false alarm.`,lk?'':'The input variables you check in step 2 change what the model can learn. Try removing one and compare.'])}
+  ${lk?`<div class="verdict miss"><b>Check this result. ${pct(acc)} is too good.</b> ${ds.leak[lk]} A model in use would not have this column. That is a leak, from Section 5 of the lecture. Remove ${lk} and run again.</div>`:''}`;
+ return {html,summary:`Classification predicting ${out} from ${ins.join(', ')}: ${pct(acc)} accurate on ${te.length} test records, caught ${caught} of ${P} ${ds.posName}${lk?' (used a leaked column)':''}.`};
+}
+
+function solve(A,b){ const n=b.length, M=A.map((r,i)=>r.concat(b[i]));
+ for(let i=0;i<n;i++){ let p=i; for(let j=i+1;j<n;j++) if(Math.abs(M[j][i])>Math.abs(M[p][i])) p=j; [M[i],M[p]]=[M[p],M[i]];
+  const d=M[i][i]||1e-9; for(let j=i;j<=n;j++) M[i][j]/=d; for(let k=0;k<n;k++) if(k!==i){ const f=M[k][i]; for(let j=i;j<=n;j++) M[k][j]-=f*M[i][j]; } }
+ return M.map(r=>r[n]); }
+
+function runReg(c,ds,out,ins,type){
+ const idx=new Map(ds.rows.map((r,i)=>[r,i])); let tr,te;
+ if(type==='fore'){ const cut=Math.floor(ds.rows.length*.85); tr=ds.rows.slice(0,cut); te=ds.rows.slice(cut); }
+ else { const sh=shuffled(ds.rows), cut=Math.floor(sh.length*.85); tr=sh.slice(0,cut); te=sh.slice(cut); }
+ const useT=type==='fore'||ins.includes(ds.timeCol);
+ const parts=[]; ins.forEach(n=>{ const k=kindOf(ds,n);
+  if(k==='num'){ const v=tr.map(r=>+r[n]), m=v.reduce((a,b)=>a+b,0)/v.length, s=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/v.length)||1; parts.push(r=>[(+r[n]-m)/s]); }
+  else if(k==='cat'){ const lv=[...new Set(tr.map(r=>r[n]))].slice(1); parts.push(r=>lv.map(l=>r[n]===l?1:0)); } });
+ if(useT) parts.push(r=>[idx.get(r)/365]);
+ const X=r=>[1].concat(...parts.map(p=>p(r))), Xs=tr.map(X), y=tr.map(r=>+r[out]), d=Xs[0].length;
+ const A=Array.from({length:d},(_,i)=>Array.from({length:d},(_,j)=>Xs.reduce((s,x)=>s+x[i]*x[j],0)+(i===j&&i>0?.5:0)));
+ const w=solve(A,Array.from({length:d},(_,i)=>Xs.reduce((s,x,k)=>s+x[i]*y[k],0)));
+ const pred=r=>X(r).reduce((s,x,i)=>s+x*w[i],0), mean=y.reduce((a,b)=>a+b,0)/y.length;
+ const mae=te.reduce((s,r)=>s+Math.abs(pred(r)-r[out]),0)/te.length, bmae=te.reduce((s,r)=>s+Math.abs(mean-r[out]),0)/te.length;
+ let chart='';
+ if(type==='fore'){ const L=te.slice(-60), dt=k=>L[k][ds.timeCol];
+  chart=chartBox('Time-series forecasting: the last 60 days the model never saw',legend([['--c1','What really sold'],['--c2','What the model forecast']])+lines([{c:'--c1',name:'What really sold',pts:L.map((r,k)=>[k,+r[out]])},{c:'--c2',name:'Forecast',dash:1,pts:L.map((r,k)=>[k,pred(r)])}],'Line chart of actual and forecast kilograms for the last 60 days','day',ds.unit+' sold',k=>dt(Math.round(k))),'The model learned from the past and forecast forward. Where the two lines stay close, the forecast was good. Point to a day to see its numbers.'); }
+ else chart=chartBox('Regression: each dot is one test day',scatter(te.map(r=>({x:+r[out],y:pred(r),c:'--c1',t:`${r[ds.timeCol]}: sold ${r[out]} ${ds.unit}, predicted ${r1(pred(r))}`})),'Scatter plot of actual and predicted kilograms','what really sold ('+ds.unit+')','what the model predicted ('+ds.unit+')',{diag:1}),'Dots on the dashed line are perfect predictions. The farther a dot sits from the line, the bigger the miss.');
+ const note=type==='reg'?`<div class="verdict ok"><b>Regression works here, with one catch.</b> Part D split the days at random, so the model learned from days that come after some of its test days. That mixes up time, the leak from Section 5 of the lecture, and makes the score look better than it will be. Time-series forecasting trains on the past and tests on the most recent days. Try it and compare.</div>`:'';
+ const html=`<div class="verdict best"><b>The model ran.</b> It learned from ${fmtN(tr.length)} days and was tested on ${fmtN(te.length)} days it never saw${type==='fore'?': the most recent ones':''}.</div>
+  <div class="stats"><div class="card"><div class="muted">Average miss per day</div><div class="score">${r1(mae)} ${ds.unit}</div><div class="counter">How far the forecast was from what really sold, on average.</div></div>
+  <div class="card"><div class="muted">Guessing the average every day</div><div class="score">${r1(bmae)} ${ds.unit}</div><div class="counter">The miss with no model at all.</div></div></div>${chart}
+  ${concl([`The forecast misses by about ${r1(mae)} ${ds.unit} a day, compared with ${r1(bmae)} ${ds.unit} with no model. The owner can roast closer to what will sell.`,`It still misses some days, so the owner should roast a small extra amount as a cushion.`,`Check which input variables help: run again without holiday or base_payday and see whether the miss grows.`])}${note}`;
+ return {html,summary:`${typeName(type)} predicting ${out} from ${ins.join(', ')}: average miss ${r1(mae)} ${ds.unit} per day (${r1(bmae)} ${ds.unit} with no model).`};
+}
+
+function anomConcl(ds,ins,top,found){
+ const harm=top.filter(r=>!r._inc), denied=harm.filter(r=>r.access_granted==='No').length, missed=ds.rows.filter(r=>r._inc&&!top.includes(r));
+ return [`The guard checks 15 videos instead of ${fmtN(ds.rows.length)} swipes. ${found} of the 15 ${found===1?'shows':'show'} a real problem. The other ${15-found} are unusual but harmless. A flag is a reason to look, not proof that someone did something wrong.`,
+  ins.includes('access_granted')&&denied>=3?`${denied} of the harmless flags are denied swipes (access No). Denied swipes are rare, so the model treats them as unusual. But a door that stays locked is the security system working, not a break-in. <b>Run again without access_granted and compare.</b>`:'',
+  found===8?'Every real problem made the list. The model compared each swipe with what is normal for that role, at that door, at that hour.':`The model missed ${missed.length}: ${missed.map(r=>`${r.role.toLowerCase()} badge ${r.badge_id} at the ${r.door.toLowerCase()} at ${r.time} on ${r.day}`).join('; ')}.`,
+  'The input variables you check in step 2 decide what the model treats as unusual. Change them, run again, and compare how many real problems make the list.'];
+}
+function runAnom(c,ds,ins){
+ const v=(r,n)=>kindOf(ds,n)==='time'?(Math.floor(parseInt(r[n])/3)*3)+'h':r[n];
+ const cond=ins.includes('role')?'role':null, feats=ins.filter(n=>n!==cond), cnt={}, tot={};
+ ds.rows.forEach(r=>{ const g=cond?r[cond]:'*'; tot[g]=(tot[g]||0)+1; feats.forEach(n=>{ const k=g+'|'+n+'|'+v(r,n); cnt[k]=(cnt[k]||0)+1; }); if(cond){ cnt['role|'+r.role]=(cnt['role|'+r.role]||0)+1; } });
+ const score=r=>{ const g=cond?r[cond]:'*'; let s=feats.reduce((a,n)=>a-Math.log(((cnt[g+'|'+n+'|'+v(r,n)]||0)+.5)/(tot[g]+1)),0); if(cond) s-=Math.log(cnt['role|'+r.role]/ds.rows.length)*.3; return s; };
+ const top=ds.rows.map(r=>[r,score(r)]).sort((a,b)=>b[1]-a[1]).slice(0,15).map(x=>x[0]), found=top.filter(r=>r._inc).length, topSet=new Set(top);
+ const html=`<div class="verdict best"><b>The model ran.</b> It learned what normal swipes look like from all ${fmtN(ds.rows.length)} swipes, with no labels, and flagged the 15 most unusual for a guard to check first.</div>
+  <div class="stats"><div class="card"><div class="muted">Swipes flagged</div><div class="score">15</div><div class="counter">Out of ${fmtN(ds.rows.length)}. A guard can check 15 videos in a morning.</div></div>
+  <div class="card"><div class="muted">Real problems the model found</div><div class="score">${found} of 8</div><div class="counter">This mock data has 8 swipes built in on purpose as real problems, such as the cleaning badge in the server room at 2:14 a.m. on a Sunday. The model was never told which ones. This count shows how many it found on its own.</div></div></div>
+  ${chartBox('Anomaly detection: every swipe by door and time of day',legend([['--c0','Normal swipe','dot'],['--c1','Flagged by the model','dot'],['--c2','Real problem','ring']])+doorClock(ds.rows,'Dot chart of every swipe by door and time, with flagged swipes highlighted',r=>topSet.has(r)?'--c1':'--c0',r=>topSet.has(r)?5.5:2.2,r=>`${r.badge_id}, ${r.role}, ${r.door}, ${r.time} ${r.day}${r._inc?': real problem':''}`,r=>r._inc),'Each dot is one swipe. Most swipes crowd into the usual hours for each door. The model flags the swipes that sit far from that pattern. A ring marks a real problem.')}
+  <div class="datab"><table><tr><th>#</th><th>badge_id</th><th>role</th><th>door</th><th>time</th><th>day</th><th>access</th><th></th></tr>${top.slice(0,10).map((r,i)=>`<tr><td>${i+1}</td><td>${r.badge_id}</td><td>${r.role}</td><td>${r.door}</td><td>${r.time}</td><td>${r.day}</td><td>${r.access_granted}</td><td>${r._inc?'<b class="good">★ real incident</b>':''}</td></tr>`).join('')}</table></div>
+  ${concl(anomConcl(ds,ins,top,found))}
+  ${!cond?`<div class="verdict ok"><b>Try adding role.</b> Without it, the model cannot tell that a server room swipe is normal for IT staff and unusual for cleaning staff.</div>`:''}
+  ${!ins.includes('time')?`<div class="verdict ok"><b>Try adding time.</b> A 2 a.m. swipe is the clearest sign something is off.</div>`:''}`;
+ return {html,summary:`Anomaly detection on ${ins.join(', ')}: flagged 15 of ${fmtN(ds.rows.length)} swipes, ${found} of 8 real incidents on the list.`};
+}
+
+function runClus(c,ds,ins,k){
+ const enc=[]; ins.forEach(n=>{ const kd=kindOf(ds,n), get=kd==='time'?r=>parseInt(r[n]):r=>+r[n];
+  if(kd==='num'||kd==='time'){ const v=ds.rows.map(get), m=v.reduce((a,b)=>a+b,0)/v.length, s=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/v.length)||1; enc.push(r=>[(get(r)-m)/s]); }
+  else if(kd==='cat'){ const lv=[...new Set(ds.rows.map(r=>r[n]))]; enc.push(r=>lv.map(l=>r[n]===l?1:0)); } });
+ const P=ds.rows.map(r=>[].concat(...enc.map(f=>f(r)))), dist=(a,b)=>a.reduce((s,x,i)=>s+(x-b[i])**2,0);
+ rs=55; const C=[P[Math.floor(R()*P.length)]];
+ while(C.length<k){ const d=P.map(p=>Math.min(...C.map(q=>dist(p,q)))), tot=d.reduce((a,b)=>a+b,0); let x=R()*tot, i=0; while(x>d[i]){ x-=d[i]; i++; } C.push(P[Math.min(i,P.length-1)]); }
+ let lab=[]; for(let it=0;it<40;it++){ lab=P.map(p=>{ let b=0; C.forEach((q,j)=>{ if(dist(p,q)<dist(p,C[b])) b=j; }); return b; });
+  C.forEach((_,j)=>{ const m=P.filter((_,i)=>lab[i]===j); if(m.length) C[j]=m[0].map((_,d)=>m.reduce((s,p)=>s+p[d],0)/m.length); }); }
+ const groups=C.map((_,j)=>ds.rows.filter((_,i)=>lab[i]===j)).map((rows,j)=>({j,rows})).filter(g=>g.rows.length).sort((a,b)=>b.rows.length-a.rows.length);
+ const desc=(rows,n)=>{ const kd=kindOf(ds,n); if(kd==='num') return fmtN(Math.round(rows.reduce((s,r)=>s+(+r[n]),0)/rows.length));
+  const vs=rows.map(r=>kd==='time'?(Math.floor(parseInt(r[n])/3)*3)+':00 to '+(Math.floor(parseInt(r[n])/3)*3+2)+':59':r[n]), c2={}; vs.forEach(x=>c2[x]=(c2[x]||0)+1); const t=Object.keys(c2).sort((a,b)=>c2[b]-c2[a])[0]; return `${t} (${pct(c2[t]/rows.length)})`; };
+ const col=i=>`var(${CH[i%CH.length]})`, gi=new Map(groups.map((g,i)=>[g.j,i]));
+ const gl=legend(groups.map((g,i)=>[CH[i],`Group ${i+1} (${fmtN(g.rows.length)})`,'dot']));
+ let plot=''; const nums=ins.filter(n=>kindOf(ds,n)==='num');
+ if(nums.length>=2){ const [a,b]=nums.includes('age')&&nums.includes('avg_balance_usd')?['age','avg_balance_usd']:nums;
+  const centers=groups.map((g,i)=>({x:g.rows.reduce((s,r)=>s+(+r[a]),0)/g.rows.length,y:g.rows.reduce((s,r)=>s+(+r[b]),0)/g.rows.length,c:CH[i],n:i+1}));
+  plot=chartBox(`Clustering: each dot is one record, colored by the group the model found`,gl+scatter(ds.rows.map((r,i)=>({x:+r[a],y:+r[b],c:CH[gi.get(lab[i])],t:`Group ${gi.get(lab[i])+1}: ${a} ${r[a]}, ${b} ${fmtN(r[b])}`,r:2.8,op:.7})),`Scatter plot of ${a} and ${b} colored by group`,a,b,{centers}),`${a} across, ${b} up. The model was never told these groups. It found them by putting similar records together. A numbered circle marks the center of each group.`); }
+ else if(ins.includes('door')&&ins.includes('time')) plot=chartBox('Clustering: every swipe, colored by the group the model found',gl+doorClock(ds.rows,'Dot chart of swipes by door and time colored by group',r=>CH[gi.get(lab[ds.rows.indexOf(r)])],()=>2.6,r=>r.badge_id),'Each dot is one swipe, placed by door and time of day. The colors show the groups the model found on its own.');
+ else plot=chartBox('Clustering: how many records landed in each group',vbars(groups.map((g,i)=>({label:'Group '+(i+1),v:g.rows.length,c:CH[i]})),'Bar chart of group sizes'),'Check two number columns, or door and time, to see the groups as dots.');
+ const inc=c.id==='c4'?groups.map(g=>g.rows.filter(r=>r._inc).length):null;
+ const html=`<div class="verdict best"><b>The model ran.</b> It sorted all ${fmtN(ds.rows.length)} records into ${groups.length} groups on its own, with no labels.${nums.length>=2?' Part D scales every number first, as in Section 4 of the lecture, so a column measured in dollars does not swamp a column measured in years.':''}</div>
+  <div class="datab"><table><tr><th>Group</th><th>Records</th>${ins.map(n=>`<th class="mono" style="text-transform:none">${n}</th>`).join('')}${inc?'<th>Real incidents</th>':''}</tr>${groups.map((g,i)=>`<tr><td><b><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col(i)};margin-right:6px"></i>Group ${i+1}</b></td><td>${fmtN(g.rows.length)}</td>${ins.map(n=>`<td>${desc(g.rows,n)}</td>`).join('')}${inc?`<td>${inc[i]}</td>`:''}</tr>`).join('')}</table></div>
+  ${plot}<p class="counter">In the table, numbers show the group's average. Categories show the most common value and its share.</p>
+  ${concl(['The model found the groups, but it did not name them. A person has to read each group\'s averages and decide what the group means and whether it is useful.','Change the number of groups and run again. The groups change. There is no single right number; pick the one that gives groups a person can act on.'])}
+  ${c.id==='c4'?'<div class="verdict ok"><b>Clustering works here, with one catch.</b> It gives groups, not a short list. The unusual swipes hide inside groups of normal ones. Anomaly detection ranks every swipe from most to least unusual, which is what the supervisor asked for. Try it and compare.</div>':'<p><b>Your next step:</b> give each group a name a person would understand, such as "young members who use the app."</p>'}`;
+ return {html,summary:`Clustering into ${groups.length} groups on ${ins.join(', ')}: group sizes ${groups.map(g=>g.rows.length).join(', ')}.`};
+}
+
+function runRec(c,ds){
+ const by={}; ds.rows.forEach(r=>(by[r.learner_id]=by[r.learner_id]||[]).push(r)); const L=Object.keys(by).filter(l=>by[l].length>=2);
+ const trans={}, pop={};
+ L.forEach(l=>{ const s=by[l].slice(0,-1).map(r=>r.lesson_id); s.forEach((x,i)=>{ pop[x]=(pop[x]||0)+1; if(i){ const k=s[i-1]; trans[k]=trans[k]||{}; trans[k][x]=(trans[k][x]||0)+1; } }); });
+ const popOrder=Object.keys(pop).sort((a,b)=>pop[b]-pop[a]);
+ let hit=0,phit=0; const ex=[];
+ L.forEach((l,i)=>{ const hist=by[l].slice(0,-1).map(r=>r.lesson_id), last=hist[hist.length-1], truth=by[l][by[l].length-1].lesson_id, t=trans[last]||{};
+  const sug=Object.keys(t).sort((a,b)=>t[b]-t[a]).filter(x=>x!==last).slice(0,3), ps=popOrder.filter(x=>!hist.includes(x)).slice(0,3);
+  if(sug.includes(truth)) hit++; if(ps.includes(truth)) phit++; if(i<3) ex.push([l,hist,sug,truth]); });
+ const html=`<div class="verdict best"><b>The model ran.</b> For each learner, it hid the most recent lesson, then suggested three lessons based on what other learners took after the same lesson.</div>
+  <div class="stats"><div class="card"><div class="muted">Right lesson in the top 3</div><div class="score">${pct(hit/L.length)}</div><div class="counter">${hit} of ${L.length} learners.</div></div>
+  <div class="card"><div class="muted">Suggesting the 3 most popular lessons</div><div class="score">${pct(phit/L.length)}</div><div class="counter">The same suggestion for everyone, with no model.</div></div></div>
+  ${(()=>{ const opts=l=>{ const h=by[l].slice(0,-1).map(r=>r.lesson_id), la=h[h.length-1]; return Object.keys(trans[la]||{}).filter(x=>x!==la).length; };
+   const lb=L.slice().sort((a,b)=>opts(b)-opts(a))[0], hist=by[lb].slice(0,-1).map(r=>r.lesson_id), e=[lb,hist], last=hist[hist.length-1], t=trans[last]||{}, ks=Object.keys(t).filter(x=>x!==last).sort((a,b)=>t[b]-t[a]).slice(0,6);
+   return chartBox(`Recommendation: what other learners took after ${last}`,legend(ks.length>3?[['--c1','Suggested to '+e[0]],['--c0','Not suggested']]:[['--c1','Suggested to '+e[0]]])+vbars(ks.map((k2,i)=>({label:k2,v:t[k2],c:i<3?'--c1':'--c0'})),'Bar chart of next lessons taken by other learners'),`Learner ${e[0]} just finished ${last}. Each bar counts how many other learners took that lesson next. The model suggests the ${ks.length>=3?'three tallest bars':ks.length===1?'only bar':'bars shown'}.`); })()}
+  <div class="datab"><table><tr><th>Learner</th><th>Lessons taken</th><th>Model suggests</th><th>Really took next</th></tr>${ex.map(e=>`<tr><td>${e[0]}</td><td>${e[1].join(', ')}</td><td>${e[2].join(', ')}</td><td>${e[3]}${e[2].includes(e[3])?' <b class="good">✓</b>':''}</td></tr>`).join('')}</table></div>
+  ${concl([hit>phit?`Suggestions based on similar learners found the right next lesson for ${pct(hit/L.length)} of learners, better than the ${pct(phit/L.length)} from suggesting the most popular lessons to everyone.`:`Suggesting the most popular lessons did as well as the model here. A more complex model is not always worth it.`,'The coach still decides. A suggestion is a starting point, and the coach knows things the data does not, such as a learner\'s upcoming move.'])}
+  <div class="verdict ok"><b>Cold start:</b> a brand-new learner has no lessons yet, so this model has nothing to go on. What would you suggest first?</div>`;
+ return {html,summary:`Recommendation of lesson_id for each learner_id: right lesson in the top 3 for ${pct(hit/L.length)} of learners (${pct(phit/L.length)} with the most popular lessons).`};
+}
+
+function runSent(c,ds,ins){
+ const P=['finally','support','safer','good','thank','glad','helps','great','wonderful','賛成'], N=['punishes','nowhere','unfair','too few','terrible','against','worse','too high','unclear','bad','困'];
+ const txt=ins.find(n=>kindOf(ds,n)==='text');
+ const tone=s=>{ const t=String(s).toLowerCase(), p=P.filter(w=>t.includes(w)).length, n=N.filter(w=>t.includes(w)).length; return p>n?'positive':n>p?'negative':'neutral'; };
+ const out=ds.rows.map(r=>[r,tone(r[txt])]), agree=out.filter(([r,t])=>t===r._tone).length, cnt={positive:0,negative:0,neutral:0}; out.forEach(([,t])=>cnt[t]++);
+ const by={}; out.forEach(([r,t])=>{ const g=r.neighborhood; by[g]=by[g]||{positive:0,negative:0,neutral:0}; by[g][t]++; });
+ const wrong=out.find(([r,t])=>t!==r._tone), show=[out.find(([,t])=>t==='positive'),out.find(([,t])=>t==='negative'),out.find(([,t])=>t==='neutral'),out.find(([r])=>r.language==='Japanese'),wrong].filter(Boolean);
+ const html=`<div class="verdict best"><b>The model ran.</b> A tone model that was already trained read all ${ds.rows.length} comments. Nobody had to label any of them.</div>
+  <div class="stats">${['positive','negative','neutral'].map(t=>`<div class="card"><div class="muted">${t[0].toUpperCase()+t.slice(1)}</div><div class="score">${cnt[t]}</div></div>`).join('')}</div>
+  ${chartBox('Sentiment analysis: comments sorted by tone',legend([['--c1','Positive'],['--c0','Neutral'],['--c2','Negative']])+hstack((ins.includes('neighborhood')?Object.keys(by).sort().map(g=>[g,by[g]]):[['All comments',cnt]]).map(([g,b])=>({label:g,segs:[{v:b.positive,c:'--c1',lab:'Positive'},{v:b.neutral,c:'--c0',lab:'Neutral',dark:1},{v:b.negative,c:'--c2',lab:'Negative'}]})),'Stacked bars of positive, neutral, and negative comments'),ins.includes('neighborhood')?'Each bar is one neighborhood. The model read every comment and put it in one of three tones.':'The model read every comment and put it in one of three tones. Add neighborhood as an input to see one bar for each neighborhood.')}
+  <div class="datab"><table><tr><th>Comment</th><th>Tone the model gave</th></tr>${show.map(([r,t])=>`<tr><td style="white-space:normal">${esc(r.comment)}</td><td>${t}${t!==r._tone?' <b class="bad">✗ wrong: this is '+r._tone+'</b>':''}</td></tr>`).join('')}</table></div>
+  <div class="verdict ok"><b>The model agreed with a person on ${pct(agree/ds.rows.length)} of the comments.</b> Most misses are sarcasm, such as "Great, another rule." The word "great" reads as positive, but the writer is unhappy.</div>
+  ${concl([Math.abs(cnt.negative-cnt.positive)<ds.rows.length*.1?`Residents who commented are split: ${cnt.negative} negative and ${cnt.positive} positive comments, with ${cnt.neutral} neutral. The director should expect both sides at the town meeting.`:`More comments are ${cnt.negative>cnt.positive?'against':'for'} the rule than ${cnt.negative>cnt.positive?'for':'against'} it: ${cnt.negative} negative and ${cnt.positive} positive, with ${cnt.neutral} neutral.`,'Sarcasm makes the model count some unhappy residents as happy, so the true count of negative comments is a little higher.','Before the town meeting, the director should read a sample of comments herself, not just report the counts. And people who comment online may not speak for everyone.'])}`;
+ return {html,summary:`Sentiment analysis of ${txt}: ${cnt.positive} positive, ${cnt.negative} negative, ${cnt.neutral} neutral; agreed with a person on ${pct(agree/ds.rows.length)}.`};
+}
+
+/* ---------- the Part D screen ---------- */
+function workbench(c,w){
+ const box=document.getElementById('wb'); if(!box) return;
+ const back=`<div class="row"><button class="btn" id="toBoard2">Back to the cases</button></div>`;
+ if(!WB_DS[c.id]){ box.innerHTML=`<div class="kicker">Part D</div><h3>Test it on data</h3><p>${NO_WB[c.id]}</p>${NO_WB_CHART[c.id]?NO_WB_CHART[c.id]():''}${back}`; $('#toBoard2').onclick=()=>go(1); return; }
+ const ds=getDS(c.id), T=w.test||(w.test={out:'',ins:[],type:w.type,k:4,tries:0,blocked:0,summary:''});
+ const show=ds.cols.map(x=>x[0]);
+ box.innerHTML=`<div class="kicker">Part D</div><h3>Test it on data</h3>
+  <p>Here is mock data for ${c.name}: ${fmtN(ds.rows.length)} made-up records built to look like the real thing. Build a model and see whether your choices work.</p>
+  ${next('<ol style="margin:0;padding-left:20px"><li>Pick the <b>output variable</b>: the column the AI should predict. If no column answers the problem, pick <b>Nothing to predict</b>.</li><li>Check the <b>input variables</b> the AI may use.</li><li>Pick a <b>type of AI</b>.</li><li>Select <b>Run the model</b>. If a choice does not fit, a message says why. Change it and run again.</li></ol>')}
+  <div class="datab"><table><tr>${show.map(n=>`<th class="mono" style="text-transform:none">${n}<br><span class="kindtag">${KIND[kindOf(ds,n)]}</span></th>`).join('')}</tr>${ds.rows.slice(0,6).map(r=>`<tr>${show.map(n=>`<td>${esc(r[n])}</td>`).join('')}</tr>`).join('')}</table></div>
+  <div class="row"><button class="btn ghost" id="wDl">Download the data (CSV file: comma-separated values, opens in Excel)</button><span class="counter">Showing 6 of ${fmtN(ds.rows.length)} rows.</span></div>
+  <div class="grid2"><div>
+   <label class="f" for="wOut">1. Output variable: what the AI predicts</label>
+   <select id="wOut"><option value="">Nothing to predict</option>${show.map(n=>`<option value="${n}" ${T.out===n?'selected':''}>${n} (${KIND[kindOf(ds,n)]})</option>`).join('')}</select>
+   <label class="f">2. Input variables: what the AI may use</label><div class="ins" id="wIns"></div>
+  </div><div>
+   <label class="f" for="wType">3. Type of AI</label>
+   <select id="wType">${TYPES.map(t=>`<option value="${t.id}" ${T.type===t.id?'selected':''}>${t.name}</option>`).join('')}</select>
+   <p class="counter" id="wUse" style="margin-top:6px"></p>
+   <div id="wKbox"><label class="f" for="wK">Number of groups</label><select id="wK">${[2,3,4,5].map(k=>`<option ${T.k===k?'selected':''}>${k}</option>`).join('')}</select></div>
+   <div class="row"><button class="btn" id="wRun">Run the model</button></div>
+   <p class="counter" id="wTries"></p>
+  </div></div>
+  <div id="wRes">${T.summary?`<div class="card"><b>Your last run that worked:</b> ${esc(T.summary)}</div>`:''}</div>
+  <div class="sheet" style="box-shadow:none;border:1px solid var(--line);padding:18px 20px;margin-top:16px" id="wWrite">
+   <div class="kicker">Part D · Explain your result</div>
+   <p id="wLock" class="counter"></p>
+   <label class="f" for="wMeans">1. What does your result tell ${c.who.replace(/^The /,'the ')} about the problem? Use numbers from your run.</label>
+   <p class="counter" style="margin:0 0 4px">The problem: ${c.problem}</p>
+   <textarea id="wMeans">${esc(T.means||'')}</textarea><div class="counter" id="wMeansC"></div>
+   <label class="f" for="wBenefit">2. What is the benefit of using this AI? What would you check or change before ${c.who.replace(/^The /,'the ')} acts on the result?</label>
+   <textarea id="wBenefit">${esc(T.benefit||'')}</textarea><div class="counter" id="wBenefitC"></div>
+   <div class="row"><button class="btn" id="wShow" disabled>Compare with an analyst's conclusions</button><span class="counter" id="wShowWhy"></span></div>
+  </div>${back}`;
+ const drawIns=()=>{ $('#wIns').innerHTML=show.filter(n=>n!==T.out).map(n=>`<label class="inbox"><input type="checkbox" value="${n}" ${T.ins.includes(n)?'checked':''}> <span class="mono">${n}</span> <span class="kindtag">${KIND[kindOf(ds,n)]}</span></label>`).join('');
+  $$('#wIns input').forEach(x=>x.onchange=()=>{ T.ins=$$('#wIns input:checked').map(y=>y.value); save(); }); };
+ const tries=()=>{ $('#wTries').textContent=T.tries?`Runs so far: ${T.tries}. Choices that did not fit: ${T.blocked}.`:''; };
+ const USE={class:'Predicts a category. In step 1, pick the column it learns to predict.',reg:'Predicts a number. In step 1, pick the column it learns to predict.',fore:'Predicts future values of a number. In step 1, pick the number it forecasts.',clus:'Does not predict a column. In step 1, pick Nothing to predict.',anom:'Does not predict a column. In step 1, pick Nothing to predict.',rec:'Suggests items. In step 1, pick the item column it suggests.',sent:'Uses a model already trained on tone. In step 1, pick Nothing to predict.',rl:'Learns inside a simulation.',od:'Works on images.',speech:'Works on audio.',gen:'GenAI.'};
+ const kbox=()=>{ $('#wKbox').style.display=T.type==='clus'?'block':'none'; $('#wUse').textContent=USE[T.type]||''; };
+ drawIns(); tries(); kbox();
+ const wr=()=>{ const on=!!T.summary; ['#wMeans','#wBenefit'].forEach(i=>$(i).disabled=!on);
+  $('#wLock').innerHTML=on?'Answer both questions about your last run that worked. Your answers go into your team report.':'<b>Run the model first.</b> These questions open after a run that works.';
+  const done=[['#wMeans','#wMeansC'],['#wBenefit','#wBenefitC']].map(([a,b])=>{ const n=$(a).value.trim().length; $(b).textContent=!on?'':n<MIN?`Write at least ${MIN-n} more characters.`:'Long enough.'; return n>=MIN; });
+  const ready=on&&done[0]&&done[1]; $('#wShow').disabled=!ready; $('#wShowWhy').textContent=ready?'':'Opens after you answer both questions.'; };
+ $('#wShow').onclick=()=>{ $$('#wRes .concl').forEach(x=>x.style.display='block'); const x=$('#wRes .concl'); if(x) x.scrollIntoView({behavior:'smooth',block:'center'}); };
+ $('#wMeans').oninput=e=>{ T.means=e.target.value; save(); wr(); }; $('#wBenefit').oninput=e=>{ T.benefit=e.target.value; save(); wr(); };
+ wr();
+ $('#wOut').onchange=e=>{ T.out=e.target.value; T.ins=T.ins.filter(n=>n!==T.out); save(); drawIns(); };
+ $('#wType').onchange=e=>{ T.type=e.target.value; save(); kbox(); };
+ $('#wK').onchange=e=>{ T.k=+e.target.value; save(); };
+ $('#wDl').onclick=()=>{ const q=v=>/[",\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':v;
+  const csv=[show.join(',')].concat(ds.rows.map(r=>show.map(n=>q(r[n])).join(','))).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download=c.name.replace(/[^A-Za-z0-9]+/g,'_')+'_mock_data.csv'; document.body.appendChild(a); a.click(); a.remove(); };
+ $('#toBoard2').onclick=()=>go(1);
+ $('#wRun').onclick=()=>{ T.tries++; const out=T.out||null, ins=T.ins.slice(), type=T.type, msg=check(c,ds,out,ins,type);
+  if(msg){ T.blocked++; $('#wRes').innerHTML=`<div class="verdict miss"><b>This does not work.</b> ${msg}</div>`; }
+  else { const r=type==='class'?runClass(c,ds,out,ins):type==='reg'||type==='fore'?runReg(c,ds,out,ins,type):type==='anom'?runAnom(c,ds,ins):type==='clus'?runClus(c,ds,ins,T.k):type==='rec'?runRec(c,ds):runSent(c,ds,ins);
+   T.summary=r.summary; $('#wRes').innerHTML=r.html; wr(); }
+  save(); tries(); $('#wRes').scrollIntoView({behavior:'smooth',block:'nearest'}); };
+}
+
+Object.values(S.work).forEach(w=>{ if(w.prob&&!w.probQ&&!w.probB){ const g=(PROBS.find(x=>x.id===w.prob)||{}).g; if(g==='q') w.probQ=w.prob; else if(g==='b'){ w.probB=w.prob; w.concernB=w.concern; } } });
+S.step=0; save();
+render();
+</script>
+</body>
+</html>

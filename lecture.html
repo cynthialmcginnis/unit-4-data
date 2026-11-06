@@ -1,0 +1,1360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What the Data Teaches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --bg:#e9e4d8; --paper:#fbf8f1; --paper2:#f3eee2; --ink:#1d2430; --muted:#5a6270; --line:#d9d1bf;
+  --accent:#0f6e6e; --accent-soft:#d5ecea; --amber:#b86a0c; --amber-soft:#f8e6cc;
+  --good:#2e7d4f; --good-soft:#dcefe2; --bad:#b3362c; --bad-soft:#f6dcd8; --violet:#5b4bb0; --violet-soft:#e4e0f6;
+  --spine:rgba(0,0,0,.10); --shadow:0 18px 50px rgba(40,30,10,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151b; --paper:#1b212a; --paper2:#232b36; --ink:#ece7dc; --muted:#a3abb8; --line:#333d4a;
+    --accent:#4fc3b8; --accent-soft:#163a3a; --amber:#f0a94a; --amber-soft:#3d2c14;
+    --good:#6fcf97; --good-soft:#173324; --bad:#f07a6e; --bad-soft:#3d1c19; --violet:#a99cf0; --violet-soft:#29244a;
+    --spine:rgba(0,0,0,.45); --shadow:0 18px 50px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151b; --paper:#1b212a; --paper2:#232b36; --ink:#ece7dc; --muted:#a3abb8; --line:#333d4a;
+  --accent:#4fc3b8; --accent-soft:#163a3a; --amber:#f0a94a; --amber-soft:#3d2c14;
+  --good:#6fcf97; --good-soft:#173324; --bad:#f07a6e; --bad-soft:#3d1c19; --violet:#a99cf0; --violet-soft:#29244a;
+  --spine:rgba(0,0,0,.45); --shadow:0 18px 50px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:18px/1.55 "Source Sans 3",system-ui,sans-serif;overflow:hidden}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(2rem,5vw,3.6rem)} h2{font-size:clamp(1.5rem,3.2vw,2.3rem)} h3{font-size:1.2rem}
+p{margin:.4em 0 .9em} button{font:inherit;color:inherit}
+.mono{font-family:"JetBrains Mono",monospace;font-size:.9em}
+#bar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--paper);border-bottom:1px solid var(--line);z-index:20}
+#bar .title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+#bar .title span{color:var(--muted);font-weight:400}
+.tb{border:1px solid var(--line);background:var(--paper2);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:.88rem;white-space:nowrap}
+.tb:hover{border-color:var(--accent)} .tb.on{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+#count{font-family:"JetBrains Mono",monospace;font-size:.85rem;color:var(--muted);min-width:56px;text-align:center}
+#progress{position:fixed;top:52px;left:0;height:3px;background:var(--accent);z-index:21;transition:width .4s}
+#stage{position:fixed;top:64px;bottom:12px;left:12px;right:12px;perspective:2400px}
+#stage.withnotes{right:372px}
+.slide{display:none;position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--paper);border-radius:6px 14px 14px 6px;box-shadow:var(--shadow);transform-origin:left center;backface-visibility:hidden}
+.slide.active{display:block;z-index:1}
+.slide.out{display:block;z-index:3;animation:turnOut .65s cubic-bezier(.5,.05,.7,.4) forwards}
+.slide.in{display:block;z-index:3;animation:turnIn .65s cubic-bezier(.2,.6,.4,1)}
+@keyframes turnOut{to{transform:rotateY(-105deg);opacity:.15}}
+@keyframes turnIn{from{transform:rotateY(-105deg);opacity:.15}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.slide.out,.slide.in{animation:none}}
+.page{max-width:1080px;margin:0 auto;padding:38px 48px 60px}
+.pnum{position:absolute;right:20px;bottom:12px;font-size:.8rem;color:var(--muted);font-family:"JetBrains Mono",monospace}
+.kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:6px}
+.lead{font-size:1.2rem}
+.muted{color:var(--muted)}
+.do{border-left:5px solid var(--amber);background:var(--amber-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+.do b:first-child{color:var(--amber)}
+.def{border-left:5px solid var(--accent);background:var(--accent-soft);padding:10px 16px;border-radius:0 10px 10px 0;margin:12px 0}
+.notes{display:none}
+.slide.sectiontitle.active,.slide.sectiontitle.in,.slide.sectiontitle.out{display:flex;align-items:center}
+.sectiontitle .page{width:100%}
+.bignum{font-family:Fraunces,serif;font-size:clamp(6rem,16vw,11rem);line-height:.9;color:var(--accent);opacity:.9}
+.sectiontitle h2{font-size:clamp(2rem,5vw,3.4rem)}
+.cover{background:radial-gradient(1200px 600px at 85% 10%,var(--accent-soft),transparent 60%),var(--paper)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:var(--paper2);border:1px solid var(--line);border-radius:99px;padding:3px 12px;font-size:.92rem}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.grid2>*,.grid3>*{min-width:0}
+.card{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+table{border-collapse:collapse;width:100%;font-size:.95rem;margin:10px 0}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--paper);border-radius:9px;padding:8px 16px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+.stat{font-family:Fraunces,serif;font-size:2.1rem;line-height:1}
+.good{color:var(--good)} .bad{color:var(--bad)} .amb{color:var(--amber)}
+.three{width:100%;height:280px;border-radius:12px;background:var(--paper2);border:1px solid var(--line);position:relative}
+.three .nogl{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--muted)}
+.agenda{list-style:none;padding:0;margin:0;counter-reset:a}
+.agenda li{counter-increment:a;display:flex;gap:14px;align-items:baseline;padding:10px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.agenda li::before{content:counter(a);font-family:Fraunces,serif;color:var(--accent);font-size:1.5rem;min-width:28px}
+.agenda li:hover b{color:var(--accent)}
+.q{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+.q .qt{font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.95rem;text-align:left}
+.opt:hover{border-color:var(--accent)}
+.opt.right{background:var(--good-soft);border-color:var(--good)} .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.why{margin-top:8px;font-size:.95rem;display:none}
+.why.show{display:block}
+.score{font-weight:700;color:var(--accent)}
+.dgrid td{font-family:"JetBrains Mono",monospace;font-size:.88rem;cursor:pointer;border:1px solid var(--line)}
+.dgrid td:hover{background:var(--accent-soft)}
+.dgrid td.flag{background:var(--amber-soft);outline:2px solid var(--amber)}
+.dgrid td.hit{background:var(--good-soft);outline:2px solid var(--good)}
+.dgrid td.miss{background:var(--bad-soft);outline:2px dashed var(--bad)}
+.dgrid td.fp{background:var(--violet-soft);outline:2px dashed var(--violet)}
+.loopsvg{width:100%;max-width:520px}
+.barh{height:26px;border-radius:6px;background:var(--accent);transition:width .5s;display:flex;align-items:center;padding-left:8px;color:var(--paper);font-weight:700;font-size:.85rem;white-space:nowrap}
+.barh.b{background:var(--amber)}
+.track{background:var(--paper2);border:1px solid var(--line);border-radius:7px;margin:6px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tab{border:1px solid var(--line);background:var(--paper2);border-radius:99px;padding:6px 14px;cursor:pointer}
+.tab.on{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+input[type=text],input[type=date],textarea,select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+input[type=text],textarea,select{width:100%}
+textarea{min-height:70px;resize:vertical}
+.tiles{display:flex;flex-wrap:wrap;gap:5px;min-height:46px;padding:8px;border:1px dashed var(--line);border-radius:10px}
+.tile{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff}
+.tile.leak{outline:3px solid var(--bad);outline-offset:1px}
+.splitbar{display:flex;height:46px;border-radius:10px;overflow:hidden;font-weight:700;color:#fff;margin:12px 0}
+.splitbar div{display:flex;align-items:center;justify-content:center}
+.tries{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.try{display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.92rem}
+.try:hover{border-color:var(--accent)} .try.on{border-color:var(--accent);background:var(--accent-soft)}
+.try b{color:var(--accent);white-space:nowrap}
+.trymsg{margin-top:10px;font-size:.95rem;border-left:4px solid var(--accent);padding:6px 12px;background:var(--accent-soft);border-radius:0 8px 8px 0}
+.trymsg:empty{display:none}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.show{display:flex}
+.modal .box{background:var(--paper);border-radius:16px;padding:26px 30px;max-width:560px;width:100%;box-shadow:var(--shadow)}
+#pickName{font-family:Fraunces,serif;font-size:clamp(2.4rem,7vw,4.4rem);text-align:center;margin:20px 0;color:var(--accent);min-height:1.3em}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:10px 0}
+.slot{display:flex;align-items:center;gap:6px}
+.slot span{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--muted);min-width:22px;text-align:right}
+.slot input{flex:1;min-width:0}
+#notes{position:fixed;top:64px;right:12px;bottom:12px;width:350px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;display:none;z-index:15;font-size:.95rem}
+#notes.show{display:block}
+#notes h3{font-size:1rem;color:var(--amber)}
+#notes ul{padding-left:18px} #notes li{margin:5px 0}
+.discuss{background:linear-gradient(135deg,var(--violet-soft),var(--paper))}
+.bigq{font-family:Fraunces,serif;font-size:clamp(1.5rem,3.4vw,2.4rem);line-height:1.25;margin:20px 0}
+.four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.four .card{border-top:5px solid var(--accent)}
+.four .n{font-family:Fraunces,serif;font-size:2rem;color:var(--accent);line-height:1}
+.plan label.f{display:block;font-weight:600;margin:14px 0 4px}
+.plan .hint{font-size:.88rem;color:var(--muted);margin:0 0 4px}
+.saved{font-size:.85rem;color:var(--good)}
+.flip{perspective:900px;height:190px;cursor:pointer}
+.flip .inner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.flip.open .inner{transform:rotateY(180deg)}
+.flip .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;padding:16px;border:1px solid var(--line);background:var(--paper2);overflow:auto}
+.flip .back{transform:rotateY(180deg);background:var(--accent-soft);font-size:.93rem}
+.flip .front{display:flex;flex-direction:column;justify-content:center}
+canvas.dots{width:100%;max-width:560px;height:auto;border-radius:10px;background:var(--paper2);border:1px solid var(--line)}
+.three.big{height:380px;cursor:grab;touch-action:none}
+.three .hint{position:absolute;left:12px;bottom:8px;font-size:.8rem;color:var(--muted);pointer-events:none}
+.opt.part{background:var(--amber-soft);border-color:var(--amber)}
+.kfgrid td,.kfgrid th{text-align:center} .kfgrid td:first-child,.kfgrid th:first-child{text-align:left}
+.timing{font-size:.9rem}
+.timing td{padding:6px 10px}
+@media (max-width:820px){
+  .page{padding:24px 16px 50px}
+  .grid2,.grid3,.four{grid-template-columns:1fr}
+  #stage{left:4px;right:4px} #stage.withnotes{right:4px}
+  #notes{width:auto;left:12px;top:auto;height:45vh}
+  #bar{overflow-x:auto} #bar .title{display:none}
+  .hide-sm{display:none}
+}
+@media print{
+  body{overflow:visible;background:#fff}
+  #bar,#progress,#notes,.modal,.three,.noprint{display:none!important}
+  #stage{position:static;perspective:none}
+  .slide{display:block!important;position:relative;box-shadow:none;page-break-after:always;animation:none!important;transform:none!important;overflow:visible}
+  .why{display:block}
+  textarea{min-height:110px}
+}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <div class="title">Unit 4 <span>· What the Data Teaches</span></div>
+  <button class="tb" id="bPrev" title="Previous page (Left arrow)">◀</button>
+  <div id="count">1 / 1</div>
+  <button class="tb" id="bNext" title="Next page (Right arrow)">▶</button>
+  <button class="tb hide-sm" id="bAgenda">Agenda</button>
+  <button class="tb" id="bPick" title="Pick a student (P)">Pick a student</button>
+  <button class="tb hide-sm" id="bNames">Class list</button>
+  <button class="tb" style="display:none" id="bNotes" title="Instructor talking points (N)">Notes</button>
+  <button class="tb" id="bTheme" title="Light or dark">◐</button>
+</div>
+<div id="progress"></div>
+
+<div id="stage">
+
+<!-- ============ COVER ============ -->
+<section class="slide cover" data-init="cover">
+ <div class="page">
+  <div class="kicker">Artificial Intelligence Applications · Unit 4</div>
+  <h1>What the Data Teaches</h1>
+  <p class="lead">Data selection and preparation: how to choose data you can trust and get it ready for a model. Then you match AI to real problems in the AI Lab Sprint and put it all to work on your capstone.</p>
+  <div id="coverCanvas" class="three"><div class="nogl">The 3D view needs an internet connection.</div></div>
+  <p class="muted" style="margin-top:14px">Welcome to class tonight:</p>
+  <div class="chips" id="coverNames"></div>
+ </div>
+</section>
+
+<!-- ============ AGENDA ============ -->
+<section class="slide" id="agendaSlide">
+ <div class="page">
+  <div class="kicker">Tonight</div>
+  <h2>Agenda</h2>
+  <ol class="agenda" id="agendaList">
+   <li data-go="hook"><div><b>A fraud model that never catches fraud</b><br><span class="muted">Opening problem</span></div></li>
+   <li data-go="s1"><div><b>Different problems need different data</b><br><span class="muted">Data types, data formats, labels, and how much is enough</span></div></li>
+   <li data-go="s2"><div><b>Five dimensions of data quality</b><br><span class="muted">Accuracy, completeness, consistency, timeliness, representativeness</span></div></li>
+   <li data-go="s3"><div><b>Where bias hides in data</b><br><span class="muted">Five types of data bias and how to find them</span></div></li>
+   <li data-go="s4"><div><b>Preprocessing</b><br><span class="muted">Missing values, outliers, scaling, encoding, and building new input variables</span></div></li>
+   <li data-go="s5"><div><b>Training and test sets</b><br><span class="muted">Splitting data and how leaks happen</span></div></li>
+   <li data-go="s6"><div><b>Testing a dataset before you trust it</b><br><span class="muted">Profiling, cross-validation, and a vendor's score</span></div></li>
+   <li data-go="close"><div><b>Back to the clinic question</b><br><span class="muted">Class discussion</span></div></li>
+   <li data-go="sprint"><div><b>Break, then the AI Lab Sprint</b><br><span class="muted">Right AI, Right Data, with your team</span></div></li>
+   <li data-go="cap"><div><b>Capstone workshop</b><br><span class="muted">The problem, the variables, the type of AI, and the AI tool</span></div></li>
+  </ol>
+  <p class="muted">Select any line to jump to that part.</p>
+ </div>
+</section>
+
+<!-- ============ HOOK ============ -->
+<section class="slide" id="hook">
+ <div class="page">
+  <div class="kicker">Opening problem</div>
+  <h2>A fraud model that never catches fraud</h2>
+  <p>A bank has <b>5,000,000</b> card transactions. Investigators confirmed that <b>40</b> of them were fraud.</p>
+  <p>The bank trains a model to flag fraud. The model learns one rule: <b>"Every transaction is legitimate."</b> It never flags anything.</p>
+  <div class="def"><b>Accuracy</b> is the share of all predictions a model gets right. If it labels 100 transactions and 95 labels are correct, its accuracy is 95 percent.</div>
+  <div class="do"><b>What you do:</b> Decide what accuracy this model earns. Pick one answer. The explanation appears below your choice.</div>
+  <div class="opts" id="hookOpts">
+   <button class="opt" data-v="0">About 50 percent</button>
+   <button class="opt" data-v="1">About 90 percent</button>
+   <button class="opt" data-v="2">Over 99 percent</button>
+  </div>
+  <div class="why" id="hookWhy">
+   <div id="hookVerdict" class="card" style="margin-top:14px"></div>
+   <p class="mono" style="font-size:1.05rem;margin-top:12px">4,999,960 correct ÷ 5,000,000 total = <b>99.9992 percent</b></p>
+   <div class="grid2">
+    <div class="card"><div class="muted">Accuracy</div><div class="stat good">99.9992%</div><div class="muted">It looks almost perfect.</div></div>
+    <div class="card"><div class="muted">Fraud caught</div><div class="stat bad">0 of 40</div><div class="muted">The one thing the bank built it to do.</div></div>
+   </div>
+   <ul style="margin-top:14px">
+    <li><b>Plenty of data is not the same as enough data.</b> The bank had 5 million records and only 40 examples of the thing it needed the model to learn.</li>
+    <li><b>One score can hide a weak spot.</b> The better question: "How many of the 40 fraud cases did it catch?"</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<!-- ============ THINK ABOUT THIS ============ -->
+<section class="slide discuss">
+ <div class="page">
+  <div class="kicker">Think about this through the lecture</div>
+  <div class="bigq">A small rural clinic buys a diagnostic tool trained on records from large city hospitals. The vendor reports 94 percent accuracy. The clinic never sees the data.</div>
+  <p class="lead">Which one question would you ask the vendor first? What answer would make you walk away from the purchase?</p>
+  <p class="muted">A <b>vendor</b> is the company selling the tool. We discuss this together at the end of the lecture.</p>
+ </div>
+</section>
+
+<!-- ============ KEY TERMS ============ -->
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Words we use tonight</div>
+  <h2>Key terms</h2>
+  <p>Every term on this list shows up in the lecture and in the capstone workshop.</p>
+  <table>
+   <tr><th style="width:24%">Term</th><th>Meaning</th><th style="width:32%">Example</th></tr>
+   <tr><td><b>Artificial intelligence (AI)</b></td><td>Computer systems that do tasks that normally need human judgment, such as predicting, sorting, or recognizing images.</td><td>A fraud alert on a bank card</td></tr>
+   <tr><td><b>Generative AI (GenAI)</b></td><td>AI that creates new text, images, or code from instructions.</td><td>A chatbot that drafts an email</td></tr>
+   <tr><td><b>Dataset</b></td><td>A collection of records used to build or test a model.</td><td>A spreadsheet of 1,000 clinic appointments</td></tr>
+   <tr><td><b>Record (row)</b></td><td>One item in the dataset.</td><td>One appointment</td></tr>
+   <tr><td><b>Variable (column)</b></td><td>One piece of information recorded about every item. Machine learning also calls a variable a <b>feature</b>.</td><td>Patient age, appointment date</td></tr>
+   <tr><td><b>Input variables</b></td><td>The variables the model uses to make its prediction.</td><td>Age, days between booking and appointment, past no-shows</td></tr>
+   <tr><td><b>Output variable</b></td><td>The one variable the model predicts. In past examples, its value is called the <b>label</b>.</td><td>"Showed up" or "missed"</td></tr>
+   <tr><td><b>Model</b></td><td>The program that learns a pattern linking the input variables to the output variable.</td><td>A no-show predictor</td></tr>
+   <tr><td><b>Training</b></td><td>The step where the model learns from past examples that already have labels.</td><td>Feeding it last year's appointments</td></tr>
+   <tr><td><b>Preprocessing</b></td><td>Cleaning and reshaping data so a model can use it.</td><td>Fixing date formats, filling blanks</td></tr>
+  </table>
+ </div>
+</section>
+
+<!-- ============ SECTION 1 ============ -->
+<section class="slide sectiontitle" id="s1">
+ <div class="page"><div class="bignum">1</div><div class="kicker">Section 1</div><h2>Different problems need different data</h2>
+ <p class="lead">The first data question is not "How much?" It is "What kind?"</p>
+ <p class="muted">You will match AI applications to the data they need, sort data by format, and see why labels and rare examples matter.</p></div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 1 · Applications</div>
+  <h2>Match the data to the application</h2>
+  <div class="do"><b>What you do:</b> Before you flip each card, say what data you think the application needs. Then select the card to check.</div>
+  <div class="grid3" id="appCards"></div>
+ </div>
+</section>
+
+<section class="slide" data-init="sorter">
+ <div class="page">
+  <div class="kicker">Section 1 · Formats</div>
+  <h2>Structured, unstructured, or semi-structured?</h2>
+  <div class="grid3" style="margin-bottom:10px">
+   <div class="card"><h3>Structured</h3>Rows and columns with a fixed meaning for each column. Most traditional machine learning runs on it.</div>
+   <div class="card"><h3>Unstructured</h3>No fixed fields. Emails, photos, voice recordings. Industry estimates put 80 to 90 percent of organizational data here.</div>
+   <div class="card"><h3>Semi-structured</h3>Some labeled fields wrapped around free content. An email has sender, date, and subject fields around a free-text body.</div>
+  </div>
+  <div class="do"><b>What you do:</b> Sort each item. Select the format you think fits.</div>
+  <div id="sortItems"></div>
+  <p>Score: <span class="score" id="sortScore">0 / 8</span></p>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 1 · Labels and amounts</div>
+  <h2>Labels cost money. Rare examples cost more.</h2>
+  <div class="grid2">
+   <div>
+    <p>Most business AI learns from <b>labeled examples</b>: this email is spam, this X-ray shows pneumonia, this transaction was fraud. A person usually creates each label.</p>
+    <p>Labeling 10,000 medical images can take radiologists months. When an AI project stalls, missing or unreliable labels are a common cause.</p>
+    <div class="def"><b>Cold start problem:</b> a brand-new user or product has no history, so a recommendation system has nothing to go on until data builds up.</div>
+    <p><b>The minimum test:</b> does the data include enough examples of every situation the system must handle?</p>
+   </div>
+   <div class="card">
+    <h3>The fraud dataset, drawn to scale</h3>
+    <p class="muted" style="font-size:.9rem">Each square stands for 50,000 transactions. Select the button to find the fraud.</p>
+    <canvas id="fraudCanvas" class="dots" width="500" height="250"></canvas>
+    <div class="row noprint"><button class="btn" id="fraudBtn">Show the 40 fraud examples</button></div>
+    <p id="fraudMsg" class="muted"></p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 1 · Check</div>
+  <h2>Check: Match the data to the problem</h2>
+  <p>For each system, pick the data it needs. Decide before you select.</p>
+  <div class="checkset" data-check="match"></div>
+ </div>
+</section>
+
+<!-- ============ SECTION 2 ============ -->
+<section class="slide sectiontitle" id="s2">
+ <div class="page"><div class="bignum">2</div><div class="kicker">Section 2</div><h2>Five dimensions of data quality</h2>
+ <p class="lead">"Good data" is too vague to act on. Quality breaks into five things you can check.</p>
+ <p class="muted">Perfect data does not exist. The goal is to know where your data is weak.</p></div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 2 · Data quality</div>
+  <h2>Five questions to ask any dataset</h2>
+  <table>
+   <tr><th style="width:20%">Dimension</th><th>The question it asks</th><th>How you check it</th></tr>
+   <tr><td><b>Accuracy</b></td><td>Do the values match reality?</td><td>Compare a sample against a trusted source. Flag impossible values, such as an age of 212.</td></tr>
+   <tr><td><b>Completeness</b></td><td>Is anything missing?</td><td>Count missing values in each column. Then ask <i>which</i> records are missing, not just how many.</td></tr>
+   <tr><td><b>Consistency</b></td><td>Is the same thing recorded the same way everywhere?</td><td>Look for mixed formats: "USMC" (short for United States Marine Corps) and "Marine Corps" in one column, pounds and kilograms mixed.</td></tr>
+   <tr><td><b>Timeliness</b></td><td>Is the data current enough for the purpose?</td><td>Check the date range. Shopping data from before 2020 describes a world that no longer exists.</td></tr>
+   <tr><td><b>Representativeness</b></td><td>Does the data match the people the system will serve?</td><td>Compare each group's share of the data with its share of the real population.</td></tr>
+  </table>
+  <div class="def">Software can count blanks and flag strange values. It cannot tell you whether a value makes sense. A resting heart rate of 38 looks like an error until a cardiologist tells you it is normal for a marathon runner. Quality checks need a tool and a person who knows the subject.</div>
+ </div>
+</section>
+
+<section class="slide" data-init="grid">
+ <div class="page">
+  <div class="kicker">Section 2 · Practice</div>
+  <h2>Find the problems in this clinic table</h2>
+  <div class="do"><b>What you do:</b> Select every cell you think has a quality problem. Select it again to unflag it. When you are done, select <b>Check my flags</b>. There are 8 problems. One value looks strange but is real. MCAS means Marine Corps Air Station, and USMC means United States Marine Corps.</div>
+  <div style="overflow-x:auto"><table class="dgrid" id="dgrid"></table></div>
+  <div class="row noprint"><button class="btn" id="gridCheck">Check my flags</button><button class="btn ghost" id="gridReset">Clear</button><span id="gridScore" class="score"></span></div>
+  <ul id="gridReport"></ul>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 2 · Check</div>
+  <h2>Check: Name the dimension</h2>
+  <p>Each record has a problem. Pick the quality dimension it fails.</p>
+  <div class="checkset" data-check="dim"></div>
+ </div>
+</section>
+
+<!-- ============ SECTION 3 ============ -->
+<section class="slide sectiontitle" id="s3">
+ <div class="page"><div class="bignum">3</div><div class="kicker">Section 3</div><h2>Where bias hides in data</h2>
+ <p class="lead">Data bias means the data misrepresents the world the same way every time, so the model learns it as a rule.</p>
+ <p class="muted">In Unit 2 you looked at the ethics of bias. Tonight is about mechanics: where in the data the bias comes from.</p></div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 3 · Five types</div>
+  <h2>Five types of data bias</h2>
+  <table>
+   <tr><th style="width:20%">Type</th><th>Where it comes from</th><th>Example</th></tr>
+   <tr><td><b>Selection</b></td><td>The way data was collected leaves some people or situations out.</td><td>Trained on city hospitals, used in rural clinics</td></tr>
+   <tr><td><b>Representation</b></td><td>Some groups are in the data, but too rarely for the model to learn them well.</td><td>Speech recognition with more errors for speakers it rarely heard</td></tr>
+   <tr><td><b>Measurement</b></td><td>A variable is measured badly, or measures the wrong thing.</td><td>Health spending used to stand for health need</td></tr>
+   <tr><td><b>Historical</b></td><td>The data accurately records an unfair past.</td><td>Lending decisions made under discriminatory rules</td></tr>
+   <tr><td><b>Proxy</b></td><td>A harmless-looking variable stands in for a sensitive one.</td><td>ZIP code standing in for race</td></tr>
+  </table>
+  <div class="def">A <b>proxy</b> is a variable that stands in for something else. An employment gap can stand in for caregiving, illness, a spouse's deployment, or a permanent change of station (PCS) move.</div>
+ </div>
+</section>
+
+<section class="slide" data-init="cases">
+ <div class="page">
+  <div class="kicker">Section 3 · Four areas</div>
+  <h2>Bias in four areas</h2>
+  <div class="do"><b>What you do:</b> Select each of the four areas. Read what happened, then pick your answer. The explanation appears after you pick.</div>
+  <div class="tabs noprint" id="caseTabs"></div>
+  <div class="card" id="caseBody" style="min-height:260px"></div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 3 · Feedback loop</div>
+  <h2>When biased data feeds itself</h2>
+  <p>Two neighborhoods have <b>the same amount of real crime</b>: 200 crimes a year each. Neighborhood A starts with more police patrols. Arrests happen where police are, so A produces more arrests. A model reads the arrests and assigns next year's patrols, giving a little extra to whichever area looks riskier.</p>
+  <div class="grid2">
+   <svg class="loopsvg" viewBox="0 0 400 300" aria-label="Feedback loop: more patrols in A lead to more arrests in A, the data says A is riskier, and the model sends more patrols to A">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="var(--accent)"/></marker></defs>
+    <g font-family="Source Sans 3" font-size="14" text-anchor="middle" fill="var(--ink)">
+     <rect x="115" y="10" width="170" height="46" rx="10" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="200" y="38">1. More patrols in A</text>
+     <rect x="235" y="125" width="162" height="46" rx="10" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="316" y="153">2. More arrests in A</text>
+     <rect x="105" y="240" width="190" height="46" rx="10" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="200" y="268">3. Data says A is riskier</text>
+     <rect x="3" y="125" width="170" height="46" rx="10" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="88" y="153">4. Model adds patrols</text>
+    </g>
+    <g fill="none" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#ah)">
+     <path d="M285,40 Q330,60 325,120"/><path d="M322,172 Q320,235 298,258"/><path d="M103,262 Q75,240 78,175"/><path d="M80,122 Q85,55 112,38"/>
+    </g>
+   </svg>
+   <div>
+    <div class="do"><b>What you do:</b> Predict what share of the patrols A will have after five years. Then select <b>Run another year</b> five times. Real crime never changes.</div>
+    <div class="muted">Share of patrols in A</div><div class="track"><div class="barh" id="loopA" style="width:60%">A 60%</div></div>
+    <div class="muted">Share of patrols in B</div><div class="track"><div class="barh b" id="loopB" style="width:40%">B 40%</div></div>
+    <div class="row noprint"><button class="btn" id="loopRun">Run another year</button><button class="btn ghost" id="loopReset">Reset</button><span id="loopYear" class="muted">Year 0</span></div>
+    <div class="card" id="loopMsg" style="font-size:.97rem"></div>
+   </div>
+  </div>
+  <div id="loopEnd" style="display:none">
+   <table>
+    <tr><th style="width:26%">The output variable was wrong</th><td>The model treated <b>arrests</b> as a measure of crime. Arrests measure where police are. That is <b>measurement bias</b>.</td></tr>
+    <tr><th>The model fed itself</th><td>Each year the model's decisions produced the data it learned from next year. 60 versus 40 grew to 82 versus 18.</td></tr>
+    <tr><th>How to break the loop</th><td>Use a measure that does not depend on patrols, such as crimes reported by victims. Check decisions by neighborhood every year.</td></tr>
+   </table>
+  </div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 3 · Check</div>
+  <h2>Check: Name the bias</h2>
+  <p>Pick the main type of bias in each case.</p>
+  <div class="checkset" data-check="bias"></div>
+  <div class="card" style="margin-top:14px"><h3>How to find bias before training</h3>
+   <ol style="margin:0;padding-left:20px"><li><b>Count by group.</b> Compare each group's share of the data with its share of the real population.</li><li><b>Check the labels by group.</b> If one group is labeled "high risk" far more often, ask whether the label reflects reality or how the data was collected.</li><li><b>Ask what each variable really measures.</b> What else could it stand in for?</li><li><b>Ask the people affected.</b> They spot proxies analysts miss.</li></ol></div>
+ </div>
+</section>
+
+<section class="slide discuss">
+ <div class="page">
+  <div class="kicker">Discussion · No answer on this page</div>
+  <div class="bigq">Your installation's hiring office wants an AI tool that screens resumes. It will learn from the office's last ten years of hiring decisions.</div>
+  <p class="lead">What would you check in that data before anyone trains the tool? Name the bias type you are worried about and the column you would look at.</p>
+  <div class="card" style="margin:6px 0 14px">
+   <h3 style="margin-bottom:4px">The hiring office's data</h3>
+   <p class="muted" style="margin:0 0 6px;font-size:.92rem">One row for each past applicant. The tool learns to predict the last column.</p>
+   <table style="font-size:.92rem;margin:0">
+    <tr><th style="width:28%">Column</th><th>What it records</th><th style="width:18%">Example</th></tr>
+    <tr><td class="mono">applicant_id</td><td>A number assigned to each applicant</td><td class="mono">A-10233</td></tr>
+    <tr><td class="mono">first_name</td><td>The applicant's first name</td><td class="mono">Maria</td></tr>
+    <tr><td class="mono">zip_code</td><td>The ZIP code of the applicant's home address</td><td class="mono">22134</td></tr>
+    <tr><td class="mono">graduation_year</td><td>Year the applicant finished high school</td><td class="mono">2004</td></tr>
+    <tr><td class="mono">years_experience</td><td>Years of work in a related job</td><td class="mono">8</td></tr>
+    <tr><td class="mono">employment_gap_months</td><td>Longest stretch without a job, in months</td><td class="mono">14</td></tr>
+    <tr><td class="mono">moves_last_5_years</td><td>Number of times the applicant changed home address</td><td class="mono">3</td></tr>
+    <tr><td class="mono">veteran_status</td><td>Whether the applicant served in the military</td><td class="mono">Yes</td></tr>
+    <tr><td class="mono">interview_score</td><td>Score from 1 to 10 given by the hiring manager</td><td class="mono">6</td></tr>
+    <tr><td class="mono">hired</td><td><b>The output variable:</b> whether the office hired the applicant</td><td class="mono">No</td></tr>
+   </table>
+  </div>
+  <div class="row noprint"><button class="btn" data-pick>Pick a student</button></div>
+ </div>
+</section>
+
+<!-- ============ SECTION 4 ============ -->
+<section class="slide sectiontitle" id="s4">
+ <div class="page"><div class="bignum">4</div><div class="kicker">Section 4</div><h2>Preprocessing: turning raw data into model input</h2>
+ <p class="lead">Preprocessing is a series of choices. Each choice changes what the model can learn.</p>
+ <p class="muted">There is no single correct set of steps, but there are wrong choices for a given problem.</p></div>
+</section>
+
+<section class="slide" data-init="mv">
+ <div class="page">
+  <div class="kicker">Section 4 · Missing values</div>
+  <h2>Three options for missing values, three risks</h2>
+  <p>A clinic has 1,000 patients. 120 are missing a blood pressure reading. Those 120 were sicker on average, and half of them missed later appointments.</p>
+  <div class="do"><b>What you do:</b> Select each option. Compare what the model would see.</div>
+  <div class="tabs noprint" id="mvTabs"><button class="tab on" data-o="0">Delete the rows</button><button class="tab" data-o="1">Fill in a value</button><button class="tab" data-o="2">Fill in and flag</button></div>
+  <div class="grid2">
+   <div class="card" id="mvText"></div>
+   <div class="card"><div class="muted" style="font-size:.9rem">What the model sees: 10 sample patients</div><table id="mvTable" style="font-size:.88rem"></table></div>
+  </div>
+ </div>
+</section>
+
+<section class="slide" data-init="outliers">
+ <div class="page">
+  <div class="kicker">Section 4 · Outliers</div>
+  <h2>Outliers: error or real?</h2>
+  <p>An <b>outlier</b> is a value far from the rest. Every outlier is one of two things:</p>
+  <ul style="margin-top:0"><li><b>An error:</b> a value that cannot be true, such as a typing mistake or a broken sensor. Fix it or remove it.</li><li><b>Real but unusual:</b> a true value that is rare. Keep it. A fraud model exists to find unusual transactions, so deleting every outlier deletes the fraud.</li></ul>
+  <div class="do"><b>What you do:</b> For each value, decide: is it an error to fix, or a real value to keep?</div>
+  <div id="outItems"></div>
+  <p>Score: <span class="score" id="outScore">0 / 6</span></p>
+  <p class="muted">Rule: before you remove an outlier, find out what caused it.</p>
+ </div>
+</section>
+
+<section class="slide" data-init="scaling">
+ <div class="page">
+  <div class="kicker">Section 4 · Scaling · 3D</div>
+  <h2>Scaling: why 500 flight hours swamp 3 faults</h2>
+  <p>Some models compare records by measuring the <b>distance</b> between them. <b>k-nearest neighbors</b> is the classic example: it labels a new record by looking at the most similar records it already knows. If one variable uses big numbers, it controls the distance.</p>
+  <div class="grid2">
+   <div>
+    <div id="scaleView" class="three big"><div class="hint">Drag to rotate</div><div class="nogl">The 3D view needs an internet connection.</div></div>
+    <div class="tabs noprint" style="margin-top:8px" id="scaleTabs"><button class="tab on" data-m="raw">Raw units</button><button class="tab" data-m="norm">Normalized</button><button class="tab" data-m="std">Standardized</button></div>
+   </div>
+   <div>
+    <p class="muted" id="scaleCaption"></p>
+    <div class="do"><b>What you do:</b> Three aircraft parts are lit up. Decide which part is most like Part A. Then switch between the three views and check your answer under each one.</div>
+    <table style="font-size:.9rem"><tr><th>Part</th><th>Flight hours</th><th>Past faults</th></tr>
+     <tr><td><b style="color:var(--accent)">A</b></td><td>6,000</td><td>1</td></tr>
+     <tr><td><b style="color:var(--bad)">B</b></td><td>6,500</td><td>9</td></tr>
+     <tr><td><b style="color:var(--amber)">C</b></td><td>5,000</td><td>1</td></tr></table>
+    <div class="card" id="scaleDist"></div>
+   </div>
+  </div>
+  <div class="def"><b>Normalization</b> squeezes every value into the range 0 to 1: (value − minimum) ÷ (maximum − minimum). <b>Standardization</b> centers each variable at 0: (value − average) ÷ standard deviation. Use standardization when the data has outliers.</div>
+ </div>
+</section>
+
+<section class="slide" data-init="encode">
+ <div class="page">
+  <div class="kicker">Section 4 · Encoding</div>
+  <h2>Turning categories into numbers</h2>
+  <p>Models do math, so words like "Navy" must become numbers. How you convert them changes what the model believes.</p>
+  <div class="tabs noprint" id="encTabs"><button class="tab on" data-e="label">Label encoding</button><button class="tab" data-e="hot">One-hot encoding</button></div>
+  <div class="grid2">
+   <div class="card" style="overflow-x:auto"><table id="encTable"></table></div>
+   <div id="encText"></div>
+  </div>
+  <div class="do"><b>What you do:</b> Switch between the two methods. Then answer both questions below.</div>
+  <div id="encQs"></div>
+ </div>
+</section>
+
+<section class="slide" data-init="feature">
+ <div class="page">
+  <div class="kicker">Section 4 · Building better input variables</div>
+  <h2>Feature engineering: new variables from old ones</h2>
+  <p><b>Feature engineering</b> means creating new input variables that capture what matters. A clinic records two dates: the day the appointment was booked and the day of the appointment. Each date alone says little. From them you can build day of the week, month, weekend or not, and the number of days between booking and appointment.</p>
+  <div class="do"><b>What you do:</b> Select each <b>Try it</b> button and watch the new variables change. Then answer the question below.</div>
+  <div class="grid2">
+   <div class="card">
+    <div class="row">Booked on <input type="date" id="feB" value="2026-09-01"></div>
+    <div class="row">Appointment on <input type="date" id="feA" value="2026-11-27"></div>
+    <div class="tries noprint" id="feTries"></div>
+    <div class="trymsg" id="feMsg"></div>
+   </div>
+   <div class="card"><table id="feOut"></table></div>
+  </div>
+  <div class="q">
+   <div class="row" style="justify-content:space-between;margin:0 0 8px"><div class="qt" style="margin:0">Which new variable do you think best predicts a missed appointment?</div><button class="btn noprint" data-pick>Pick a student</button></div>
+   <div class="opts" id="feOpts">
+    <button class="opt" data-j="0">Day of the week</button>
+    <button class="opt" data-j="1">Days between booking and appointment</button>
+    <button class="opt" data-j="2">Month</button>
+    <button class="opt" data-j="3">Weekend or not</button>
+   </div>
+   <div class="why" id="feWhy"></div>
+  </div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 4 · Check</div>
+  <h2>Check: Pick the technique</h2>
+  <div class="checkset" data-check="tech"></div>
+  <div class="def"><b>One rule covers all of preprocessing:</b> whatever you do to the training data, you must do exactly the same way to new data after the system goes live.</div>
+ </div>
+</section>
+
+<!-- ============ SECTION 5 ============ -->
+<section class="slide sectiontitle" id="s5">
+ <div class="page"><div class="bignum">5</div><div class="kicker">Section 5</div><h2>Training, validation, and test sets</h2>
+ <p class="lead">A model that memorizes its training data can score perfectly on it and fail on anything new.</p>
+ <p class="muted">The only honest test uses data the model has never seen.</p></div>
+</section>
+
+<section class="slide" data-init="leak">
+ <div class="page">
+  <div class="kicker">Section 5 · The split</div>
+  <h2>Split first. Then watch for leaks.</h2>
+  <div class="splitbar"><div style="width:70%;background:var(--accent)">Training 70%</div><div style="width:15%;background:var(--violet)">Validation 15%</div><div style="width:15%;background:var(--amber)">Test 15%</div></div>
+  <table style="font-size:.93rem"><tr><td><b>Training</b></td><td>The model learns patterns from it.</td></tr><tr><td><b>Validation</b></td><td>You tune the model and compare versions while you build it.</td></tr><tr><td><b>Test</b></td><td>You use it once, at the end, for an honest score.</td></tr></table>
+  <h3 style="margin-top:16px">Leak demo: 8 patients, 3 X-rays each</h3>
+  <div class="do"><b>What you do:</b> Select <b>Split by image</b> a few times. Count the patients outlined in red. Then select <b>Split by patient</b>.</div>
+  <div class="row noprint"><button class="btn" id="lkImg">Split by image (random)</button><button class="btn" id="lkPat">Split by patient</button></div>
+  <div class="grid2"><div><b>Training set</b><div class="tiles" id="lkTrain"></div></div><div><b>Test set</b><div class="tiles" id="lkTest"></div></div></div>
+  <p id="lkMsg"></p>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 5 · Check</div>
+  <h2>Check: Spot the leak</h2>
+  <div class="checkset" data-check="leak"></div>
+ </div>
+</section>
+
+<!-- ============ SECTION 6 ============ -->
+<section class="slide sectiontitle" id="s6">
+ <div class="page"><div class="bignum">6</div><div class="kicker">Section 6</div><h2>Testing a dataset before you trust it</h2>
+ <p class="lead">In 2016 Microsoft released a chatbot called Tay on Twitter. It learned from the people it talked to. Within a day, users taught it to post racist and hateful messages, and Microsoft shut it down.</p>
+ <p class="muted">No one had set up a way to screen what Tay learned from. Testing a dataset is that screen: the checkpoint between collecting data and training a model.</p></div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 6 · Profiling</div>
+  <h2>A summary of every column</h2>
+  <p>A <b>profile</b> lists a few numbers for each column before anyone reads individual rows. Here is the profile of a personnel dataset with 2,400 records.</p>
+  <div class="do"><b>What you do:</b> Find four problems in this profile. Then select <b>Show the four problems</b> to check.</div>
+  <div style="overflow-x:auto"><table style="font-size:.92rem">
+   <tr><th>Column</th><th>Average</th><th>Smallest to largest</th><th>Spread (standard deviation)</th><th>Missing</th><th>Distinct values</th></tr>
+   <tr><td class="mono">age</td><td>27</td><td>18 to 58</td><td>6</td><td>0</td><td>41</td></tr>
+   <tr><td class="mono">months_of_service</td><td>74</td><td>0 to 9,000</td><td>210</td><td>12</td><td>312</td></tr>
+   <tr><td class="mono">branch</td><td>(text)</td><td>(text)</td><td>(text)</td><td>0</td><td>5</td></tr>
+  </table></div>
+  <div class="row noprint"><button class="btn" onclick="this.parentElement.nextElementSibling.classList.add('show')">Show the four problems</button></div>
+  <div class="card why">
+   <ul style="margin:0;padding-left:20px">
+    <li><b>Largest months of service is 9,000.</b> That is 750 years. An error, perhaps 90 typed as 9,000.</li>
+    <li><b>The spread is 210 months,</b> almost three times the average. A few extreme values are pulling it up.</li>
+    <li><b>12 records are missing months of service.</b> Next question: which 12, and do they have something in common?</li>
+    <li><b>Branch has 5 distinct values</b> at an installation with 4 branches. "USMC" and "Marine Corps" are counted as two.</li>
+   </ul>
+  </div>
+  <p class="muted">The profile found four problems without anyone reading 2,400 rows. Profiling, a picture of the data, a count by group, and rules from someone who knows the subject catch most problems.</p>
+ </div>
+</section>
+
+<section class="slide" data-init="kfold">
+ <div class="page">
+  <div class="kicker">Section 6 · Cross-validation · 3D</div>
+  <h2>Cross-validation: five scores instead of one</h2>
+  <p>One train-test split gives one score, and that score may be lucky. In <b>k-fold cross-validation</b> you divide the data into k equal parts, called <b>folds</b>. Here k is 5. In each <b>round</b>, the model trains on four folds and is tested on the fifth. After five rounds, every fold has been the test fold once, so you get five scores.</p>
+  <div class="card" style="margin:0 0 12px;font-size:.96rem"><b>The example:</b> a model that predicts whether a clinic patient will show up or miss an appointment. The data is 5,000 past appointments. Each fold holds 1,000. The score is the percent of test-fold appointments the model predicted correctly.</div>
+  <div class="grid2">
+   <div id="kfView" class="three big"><div class="hint">Drag to rotate</div><div class="nogl">The 3D view needs an internet connection.</div></div>
+   <div>
+    <div class="do"><b>What you do:</b> Select <b>Run the next round</b> five times. Watch which fold slides out to be the test fold. Then decide which score matters most.</div>
+    <div class="row noprint"><button class="btn" id="kfRun">Run the next round</button><button class="btn ghost" id="kfReset">Reset</button></div>
+    <div class="card" id="kfMsg" style="font-size:.97rem"></div>
+   </div>
+  </div>
+  <div style="overflow-x:auto;margin-top:14px"><table id="kfTable" class="kfgrid" style="font-size:.93rem"></table></div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Section 6 · A vendor's score is not your score</div>
+  <h2>The sepsis alert</h2>
+  <div class="grid2">
+   <div>
+    <p style="margin-top:0"><b>Sepsis</b> is a life-threatening reaction to an infection.</p>
+    <p><b>The tool.</b> Epic, a company whose electronic health record system is used in many U.S. hospitals, built a model that sends an alert when it predicts a patient is developing sepsis. Epic reported strong accuracy on records from other hospitals.</p>
+    <p><b>The check.</b> University of Michigan researchers tested the same model on their own hospital's patients and published the results in 2021.</p>
+   </div>
+   <div>
+    <div class="card" style="margin-bottom:10px"><div class="muted">Sepsis cases the alert missed</div><div class="stat bad">About 2 of 3</div></div>
+    <div class="card"><div class="muted">Hospitalized patients who got an alert</div><div class="stat amb">About 1 in 5</div><div class="muted">Most of them did not have sepsis. When most alerts are false, staff learn to ignore them.</div></div>
+   </div>
+  </div>
+  <p style="margin-top:14px">The model did not change. The set of patients did: a different hospital, different patients, different record keeping. That is the <b>representativeness</b> problem from Section 2.</p>
+  <div class="def"><b>The lesson:</b> a score only tells you how a model did on the data it was tested on. Ask whose data produced it, then test the model on your own.</div>
+ </div>
+</section>
+
+<!-- ============ CLOSE ============ -->
+<section class="slide discuss" id="close">
+ <div class="page">
+  <div class="kicker">Discussion · No answer on this page</div>
+  <h2>Back to the clinic question</h2>
+  <div class="bigq">A small rural clinic buys a diagnostic tool trained on records from large city hospitals. The vendor reports 94 percent accuracy. The clinic never sees the data.</div>
+  <p class="lead">Which one question would you ask the vendor first? What answer would make you walk away?</p>
+  <p class="muted">Use tonight's terms: the quality dimension, the bias type, the split, or the test you would want to see.</p>
+  <div class="row noprint"><button class="btn" data-pick>Pick a student</button></div>
+ </div>
+</section>
+
+<section class="slide" id="wrap">
+ <div class="page">
+  <div class="kicker">Wrap-up</div>
+  <h2>What to take from tonight</h2>
+  <div class="grid3">
+   <div class="card"><h3>Choose</h3><ul style="padding-left:18px;margin:0"><li>Match the kind of data to the problem first.</li><li>Check all five quality dimensions separately.</li><li>Missing data is rarely random.</li><li>Bias hides in how data was collected, measured, and labeled.</li></ul></div>
+   <div class="card"><h3>Prepare</h3><ul style="padding-left:18px;margin:0"><li>Every cleaning step is a choice. Write it down.</li><li>Scale variables that use very different units. Use one-hot encoding when categories have no order.</li><li>Find the cause of an outlier before you remove it.</li><li>A new input variable can beat every column you started with.</li></ul></div>
+   <div class="card"><h3>Split and test</h3><ul style="padding-left:18px;margin:0"><li>Split before you prepare. Split by person or by time when it matters.</li><li>One score can hide a weak spot.</li><li>Test on your own data.</li></ul></div>
+  </div>
+  <div class="do"><b>Next:</b> Break. Then the AI Lab Sprint with your team.</div>
+ </div>
+</section>
+
+<!-- ============ AI LAB SPRINT ============ -->
+<section class="slide sectiontitle" id="sprint">
+ <div class="page"><div class="bignum">S</div><div class="kicker">AI Lab Sprint · Unit 4</div><h2>Right AI, Right Data</h2>
+ <p class="lead">Every organization in this sprint has a problem and a set of data. Your team decides which <b>type of AI</b> fits the problem and which <b>AI tool</b> fits the data, and explains both choices.</p>
+ <div class="row noprint" id="sprintLinkRow" style="display:none"><a class="btn" id="sprintLink" href="#" target="_blank" rel="noopener" style="text-decoration:none">Open Right AI, Right Data</a></div>
+ <p class="muted" id="sprintNoLink">Your instructor gives you the link to Right AI, Right Data.</p></div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">AI Lab Sprint · How it works</div>
+  <h2>What your team does</h2>
+  <ol>
+   <li><b>Set up.</b> Enter your team name, every member's full name, and your site. Use one laptop per team.</li>
+   <li><b>Pick a case.</b> Your site has five made-up organizations. Finish at least three.</li>
+   <li><b>Read the problem and the data.</b> Each case says who decides, what they decide, and what data the organization has, with a few examples.</li>
+   <li><b>Pick the type of AI</b> from a list of eleven. Write why it fits the problem. Name what the AI produces and whether the data has labels.</li>
+   <li><b>Pick the AI tool</b> from a list of eighteen. Write how it fits the data. Name the kind of data and what the tool takes in.</li>
+   <li><b>Pick two data problems</b> to check before anyone trusts the AI: one of the five quality dimensions and one of the five types of data bias. Write why each could show up in that organization's data.</li>
+   <li><b>Lock in your answer.</b> The tool shows how your choices compare and why.</li>
+   <li><b>Test it on data.</b> For most cases, Part D gives you mock data. Pick the output variable, the input variables, and a type of AI, then run a real model. If a choice does not fit the data, a message tells you why. Then write what the result tells the organization about its problem, and what to check before acting on it.</li>
+   <li><b>Brief the other site.</b> When your instructor calls your team, select <b>Brief the other site</b>, pick one case, and share your screen. The other site names its type of AI and tool before you reveal yours.</li>
+  </ol>
+  <div class="do"><b>Every team member</b> prints or saves the report as a PDF and uploads a copy to the Unit 4 AI Lab Sprint dropbox.</div>
+ </div>
+</section>
+
+<!-- ============ CAPSTONE WORKSHOP ============ -->
+<section class="slide sectiontitle" id="cap">
+ <div class="page"><div class="bignum">C</div><div class="kicker">Capstone workshop</div><h2>Four answers for your capstone</h2>
+ <p class="lead">Tonight you talk through your capstone with two classmates. You leave with four written answers: the problem, the variables, the type of AI, and the AI tool.</p>
+ <p class="muted">Your capstone is your own organization, so your answers are your own. Your classmates' role is to ask the questions that make your answers clear.</p></div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Capstone workshop · The four answers</div>
+  <h2>What each answer means</h2>
+  <div class="four">
+   <div class="card"><div class="n">1</div><h3>The problem</h3><p style="margin:0;font-size:.95rem">Who in your organization makes a decision, what they decide, and when. One sentence.</p></div>
+   <div class="card"><div class="n">2</div><h3>The variables</h3><p style="margin:0;font-size:.95rem">The <b>output variable</b>: the one thing the model predicts. The <b>input variables</b>: the information it uses.</p></div>
+   <div class="card"><div class="n">3</div><h3>The type of AI</h3><p style="margin:0;font-size:.95rem">The kind of task the model does, such as classification or regression. The output variable decides it.</p></div>
+   <div class="card"><div class="n">4</div><h3>The AI tool</h3><p style="margin:0;font-size:.95rem">The actual product or service you would use, such as Amazon Rekognition. A type of AI is not a tool.</p></div>
+  </div>
+  <h3>Worked example: Seaside Fitness Center (made up)</h3>
+  <table style="font-size:.95rem">
+   <tr><th style="width:20%">Answer</th><th>Seaside Fitness Center</th></tr>
+   <tr><td><b>1. Problem</b></td><td>The membership manager decides which members to call with a renewal offer, on the first of each month.</td></tr>
+   <tr><td><b>2. Output variable</b></td><td>Will this member cancel next month? Yes or no.</td></tr>
+   <tr><td><b>2. Input variables</b></td><td>Visits per week last month, months as a member, contract type, missed payments, classes booked.</td></tr>
+   <tr><td><b>3. Type of AI</b></td><td>Classification. The output is a category: cancel or stay.</td></tr>
+   <tr><td><b>4. AI tool</b></td><td>Amazon SageMaker Canvas. It builds a prediction model from a table with no coding.</td></tr>
+   <tr><td><b>Data check from tonight</b></td><td>The labels come from past cancellations. New members have only a few weeks of visits, so they are rare in the data: a representation problem.</td></tr>
+  </table>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Capstone workshop · Reference</div>
+  <h2>Match the output variable to the type of AI</h2>
+  <p>Look at your output variable first. Then find the row that fits.</p>
+  <table style="font-size:.93rem">
+   <tr><th style="width:18%">Type of AI</th><th style="width:26%">The output is</th><th>Example question</th><th style="width:26%">Example tools</th></tr>
+   <tr><td><b>Classification</b></td><td>A category</td><td>Will this member cancel? Is this box damaged?</td><td>Amazon SageMaker Canvas; Amazon Rekognition Custom Labels for photos; Google Teachable Machine for a quick prototype</td></tr>
+   <tr><td><b>Regression</b></td><td>A number</td><td>How many rooms will be booked next Friday?</td><td>Amazon SageMaker Canvas; Microsoft Excel forecasting</td></tr>
+   <tr><td><b>Clustering</b></td><td>Groups the model finds on its own, with no labels</td><td>What kinds of customers do we have?</td><td>Orange Data Mining (free, no coding); Python scikit-learn</td></tr>
+   <tr><td><b>Anomaly detection</b></td><td>A flag on unusual cases</td><td>Is this transaction unusual for this card?</td><td>Amazon SageMaker; Python scikit-learn</td></tr>
+   <tr><td><b>Recommendation</b></td><td>A ranked list of suggestions</td><td>Which training course should this employee take next?</td><td>Amazon Personalize</td></tr>
+   <tr><td><b>Time-series forecasting</b></td><td>A future number from past values over time</td><td>How many kilograms of coffee will we sell next week?</td><td>Amazon SageMaker Canvas; Microsoft Excel Forecast Sheet</td></tr>
+   <tr><td><b>Reinforcement learning</b></td><td>Actions learned by trial and error for points</td><td>Which path should each warehouse robot take?</td><td>Stable-Baselines3 with Gymnasium (requires coding)</td></tr>
+   <tr><td><b>Object detection</b></td><td>A box around each thing found in an image</td><td>Where are the vehicles in this gate camera photo?</td><td>Amazon Rekognition Custom Labels</td></tr>
+   <tr><td><b>Speech recognition</b></td><td>Written text from spoken words</td><td>What did the customer say on this support call?</td><td>Amazon Transcribe; Google Cloud Speech-to-Text</td></tr>
+   <tr><td><b>Sentiment analysis</b></td><td>The tone of text: positive, negative, or neutral</td><td>How do residents feel about the new parking rule?</td><td>Amazon Comprehend; Google Cloud Natural Language</td></tr>
+   <tr><td><b>Generation</b></td><td>New text, images, or code</td><td>A chatbot that answers customer questions. Never the best choice for a prediction or decision: its output is probabilistic, so the same input can give a different answer each time.</td><td>Google Gemini; ChatGPT; Microsoft Copilot</td></tr>
+  </table>
+  <div class="def"><b>The kind of data adds a second label.</b> Photos and video mean <b>computer vision</b>. Text and speech mean <b>natural language processing</b>. A damaged-box detector is classification using computer vision. A tool that sorts survey comments by topic is classification using natural language processing (Amazon Comprehend).</div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Capstone workshop · Practice</div>
+  <h2>Check: Practice on other organizations (optional)</h2>
+  <p>Pick your answer for each one. Decide before you select.</p>
+  <div class="checkset" data-check="cap"></div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Capstone workshop · How you work</div>
+  <h2>Three rounds, three roles</h2>
+  <p>Form a group of three with classmates at your site. Each round, one person is the <b>speaker</b> and two are <b>questioners</b>. Switch roles each round, so everyone is the speaker once.</p>
+  <table>
+   <tr><th style="width:22%">Role</th><th>What you do</th></tr>
+   <tr><td><b>Speaker</b></td><td>Describe your organization in two or three sentences. Then give your best answer to each of the four questions, even if you are not sure. Write your answers on the next page as you go.</td></tr>
+   <tr><td><b>Questioners</b></td><td>Ask the questions on the "Questions to ask your classmate" page. Do not give answers. If the speaker's answer is unclear, ask again in a different way. Tell the speaker one thing that is clear and one thing that needs work.</td></tr>
+  </table>
+  <div class="do"><b>What you do:</b> Your instructor tells you when to switch roles. When all three rounds are done, finish your page and save or print it.</div>
+  <div class="row noprint"><button class="btn" data-pick>Pick a student</button></div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Capstone workshop · Questioners use this page</div>
+  <h2>Questions to ask your classmate</h2>
+  <div class="grid2">
+   <div class="card"><h3>1. The problem</h3><ul style="margin:0;padding-left:20px">
+    <li>Who uses the AI's answer?</li><li>What do they decide with it?</li><li>When do they decide?</li><li>How would you know the AI helped?</li></ul></div>
+   <div class="card"><h3>2. The variables</h3><ul style="margin:0;padding-left:20px">
+    <li>What one thing does the model predict?</li><li>Is that a category or a number?</li><li>Name three input variables. Would you have them <i>before</i> the decision?</li><li>Where would the data come from, and who creates the labels?</li></ul></div>
+   <div class="card"><h3>3. The type of AI</h3><ul style="margin:0;padding-left:20px">
+    <li>Does the type match the output variable?</li><li>Is the data tables, photos, text, or speech?</li></ul></div>
+   <div class="card"><h3>4. The AI tool</h3><ul style="margin:0;padding-left:20px">
+    <li>Is it a real product you could sign up for?</li><li>Can it do that type of AI with that kind of data?</li><li>Why this tool and not another?</li></ul></div>
+  </div>
+  <div class="def"><b>One question from tonight's lecture:</b> Which of the five quality dimensions, or which type of bias, would most likely cause trouble in this data?</div>
+ </div>
+</section>
+
+<section class="slide" data-init="plan">
+ <div class="page plan">
+  <div class="kicker">Capstone workshop · Speaker fills in this page</div>
+  <h2>My capstone plan</h2>
+  <p class="muted noprint">Your answers save in this browser as you type. Select <b>Download my answers</b> when you finish, and upload the file to this week's capstone dropbox.</p>
+  <label class="f" for="pName">My name</label><input type="text" id="pName" data-k="name">
+  <label class="f" for="pOrg">My organization and what it does</label><textarea id="pOrg" data-k="org"></textarea>
+  <label class="f" for="pProb">1. The problem</label><p class="hint">Who decides what, and when, in one sentence.</p><textarea id="pProb" data-k="problem"></textarea>
+  <label class="f" for="pOut">2. Output variable</label><p class="hint">The one thing the model predicts.</p><input type="text" id="pOut" data-k="output">
+  <label class="f" for="pKind">Is the output a category or a number?</label>
+  <select id="pKind" data-k="kind"><option value="">Choose</option><option>A category</option><option>A number</option><option>Neither: groups, a flag, a list, or new content</option><option>Not sure yet</option></select>
+  <label class="f" for="pIn">2. Input variables</label><p class="hint">At least three, and where each one comes from.</p><textarea id="pIn" data-k="inputs"></textarea>
+  <label class="f" for="pType">3. Type of AI</label>
+  <select id="pType" data-k="type"><option value="">Choose</option><option>Classification</option><option>Regression</option><option>Clustering</option><option>Anomaly detection</option><option>Recommendation</option><option>Generation</option><option>Not sure yet</option></select>
+  <label class="f" for="pData">Kind of data</label>
+  <select id="pData" data-k="datakind"><option value="">Choose</option><option>Tables (rows and columns)</option><option>Photos or video (computer vision)</option><option>Text or speech (natural language processing)</option><option>More than one kind</option></select>
+  <label class="f" for="pTool">4. AI tool, and why it fits</label><textarea id="pTool" data-k="tool"></textarea>
+  <label class="f" for="pRisk">The data problem I worry about most, and why</label><p class="hint">Pick one: Accuracy, Completeness, Consistency, Timeliness, or Representativeness (the five quality dimensions), or Selection, Representation, Measurement, Historical, or Proxy bias (the five types of data bias).</p><textarea id="pRisk" data-k="risk"></textarea>
+  <label class="f" for="pFb">What my classmates said</label><p class="hint">One thing that is clear and one thing that needs work.</p><textarea id="pFb" data-k="feedback"></textarea>
+  <div class="row noprint"><button class="btn" id="pDl">Download my answers</button><button class="btn ghost" id="pPrint">Print this page</button><button class="btn ghost" id="pClear">Clear my answers</button><span class="saved" id="pSaved"></span></div>
+ </div>
+</section>
+
+<section class="slide discuss">
+ <div class="page">
+  <div class="kicker">Discussion · Share out</div>
+  <h2>Read us your four answers</h2>
+  <div class="bigq">Read your problem sentence, your output variable, your type of AI, and your tool.</div>
+  <p class="lead">Class: does the type of AI match the output variable? Can the tool do that type of AI with that kind of data?</p>
+  <div class="row noprint"><button class="btn" data-pick>Pick a student</button></div>
+ </div>
+</section>
+
+<section class="slide">
+ <div class="page">
+  <div class="kicker">Before you leave</div>
+  <h2>Next steps for your capstone</h2>
+  <ol>
+   <li><b>Upload your Right AI, Right Data report</b> to the Unit 4 AI Lab Sprint dropbox. Every team member uploads a copy.</li>
+   <li><b>Download your answers</b> from the "My capstone plan" page and upload the file to this week's capstone dropbox.</li>
+   <li><b>Fix your problem section.</b> If tonight changed your problem, output variable, or input variables, update your capstone draft. Fixing errors from earlier graded parts improves your grade on the final paper.</li>
+   <li><b>Start your data section.</b> Name where each input variable comes from, who creates the labels, and the one data problem you worry about most.</li>
+   <li><b>Attach the AI Use Disclosure Form</b> to everything you submit, even if you did not use GenAI.</li>
+  </ol>
+ </div>
+</section>
+
+</div>
+
+<div id="notes"></div>
+
+<div class="modal" id="pickModal"><div class="box">
+ <div class="kicker">Next to answer</div>
+ <div id="pickName"></div>
+ <div class="row" style="justify-content:center"><button class="btn" id="pickAgain">Pick again</button><button class="btn ghost" id="pickClose">Close</button></div>
+ <p class="muted" style="text-align:center;font-size:.85rem">A name won't repeat until everyone has been picked.</p>
+</div></div>
+
+<div class="modal" id="namesModal"><div class="box" style="max-width:760px;max-height:90vh;overflow:auto">
+ <h3>Class list</h3>
+ <p class="muted">Type one first name in each box. Empty boxes are skipped. The list saves in this browser.</p>
+ <div id="nameSlots" class="slots"></div>
+ <div class="row"><button class="btn ghost" id="namesAdd">Add a name box</button><button class="btn ghost" id="namesClear">Clear all</button></div>
+ <div class="row"><button class="btn" id="namesSave">Save</button><button class="btn ghost" id="namesCancel">Cancel</button></div>
+</div></div>
+
+<script>
+/* ===== EDIT THIS LIST each term. The Class list button also changes it in your browser. ===== */
+const CLASS_NAMES = ["Student 1","Student 2","Student 3","Student 4","Student 5","Student 6","Student 7","Student 8","Student 9","Student 10","Student 11","Student 12","Student 13","Student 14","Student 15"];
+/* ===== Link to the AI Lab Sprint. It sits next to this file in the same folder. ===== */
+const SPRINT_URL = "sprint.html";
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const store = {get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+               set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* theme */
+const savedTheme = store.get('u4ctheme', null);
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+$('#bTheme').onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const t = dark ? 'light' : 'dark'; document.documentElement.dataset.theme = t; store.set('u4ctheme', t);
+};
+
+/* names and random pick */
+let names = store.get('u4cnames', CLASS_NAMES);
+function renderNames(){ $('#coverNames').innerHTML = names.map(n=>`<span class="chip">${n}</span>`).join(''); }
+renderNames();
+function slotHTML(i,v){ return `<label class="slot"><span>${i}</span><input type="text" value="${String(v||'').replace(/"/g,'&quot;')}" aria-label="Student ${i}"></label>`; }
+function drawSlots(list){ const n=Math.max(20, list.length+2); let h=''; for(let i=0;i<n;i++) h+=slotHTML(i+1,list[i]); $('#nameSlots').innerHTML=h; }
+$('#bNames').onclick = () => { drawSlots(names); $('#namesModal').classList.add('show'); };
+$('#namesAdd').onclick = () => { const box=$('#nameSlots'); box.insertAdjacentHTML('beforeend', slotHTML(box.children.length+1,'')); };
+$('#namesClear').onclick = () => drawSlots([]);
+$('#namesCancel').onclick = () => $('#namesModal').classList.remove('show');
+$('#namesSave').onclick = () => { names = $$('#nameSlots input').map(i=>i.value.trim()).filter(Boolean);
+  store.set('u4cnames', names); pool=[]; renderNames(); $('#namesModal').classList.remove('show'); };
+let pool = [];
+function pick(){
+  if (!names.length) { $('#pickName').textContent='Add names first'; return; }
+  if (!pool.length) pool = [...names].sort(()=>Math.random()-.5);
+  const final = pool.pop(); let i=0; const el=$('#pickName');
+  const spin = setInterval(()=>{ el.textContent = names[Math.floor(Math.random()*names.length)]; if(++i>12){clearInterval(spin); el.textContent=final;} }, 70);
+}
+function openPick(){ $('#pickModal').classList.add('show'); pick(); }
+$('#bPick').onclick = openPick; $('#pickAgain').onclick = pick; $('#pickClose').onclick = () => $('#pickModal').classList.remove('show');
+document.addEventListener('click', e => { if (e.target.matches('[data-pick]')) openPick(); });
+
+/* book navigation */
+const slides = $$('.slide'); let cur = 0, busy = false;
+slides.forEach((s,i)=>{ const p=document.createElement('div'); p.className='pnum'; p.textContent=(i+1); s.appendChild(p); });
+const inited = {}, INIT = {};
+function show(n){
+  if (n<0 || n>=slides.length || n===cur || busy) return;
+  const old = slides[cur], nu = slides[n], fwd = n>cur;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches){ old.classList.remove('active'); nu.classList.add('active'); }
+  else if (fwd){ busy=true; nu.classList.add('active'); old.classList.remove('active'); old.classList.add('out');
+    setTimeout(()=>{ old.classList.remove('out'); busy=false; }, 660); }
+  else { busy=true; nu.classList.add('active','in'); setTimeout(()=>{ nu.classList.remove('in'); old.classList.remove('active'); busy=false; }, 660); }
+  cur = n; nu.scrollTop = 0; update(); store.set('u4cpage', n);
+}
+function update(){
+  $('#count').textContent = `${cur+1} / ${slides.length}`;
+  $('#progress').style.width = ((cur+1)/slides.length*100)+'%';
+  const s = slides[cur], nt = s.querySelector('.notes');
+  $('#notes').innerHTML = nt ? nt.innerHTML : '<p class="muted">No notes for this page.</p>';
+  const init = s.dataset.init;
+  if (init && !inited[init] && INIT[init]) { inited[init]=true; INIT[init](s); }
+}
+$('#bNext').onclick = () => show(cur+1); $('#bPrev').onclick = () => show(cur-1);
+$('#bAgenda').onclick = () => show(slides.indexOf($('#agendaSlide')));
+$('#bNotes').onclick = () => { $('#notes').classList.toggle('show'); $('#bNotes').classList.toggle('on'); $('#stage').classList.toggle('withnotes'); };
+$$('#agendaList li').forEach(li => li.onclick = () => show(slides.indexOf(document.getElementById(li.dataset.go))));
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea,select')) return;
+  if (e.key==='ArrowRight'||e.key==='PageDown') show(cur+1);
+  else if (e.key==='ArrowLeft'||e.key==='PageUp') show(cur-1);
+  else if (e.key==='n'||e.key==='N') $('#bNotes').click();
+  else if (e.key==='p'||e.key==='P') openPick();
+  else if (e.key==='Escape') $$('.modal').forEach(m=>m.classList.remove('show'));
+});
+window.addEventListener('beforeprint', () => { Object.keys(INIT).forEach(k=>{ if(!inited[k]){ inited[k]=true; INIT[k](); } }); });
+
+/* cover 3D */
+INIT.cover = () => {
+  const el = $('#coverCanvas');
+  if (typeof THREE==='undefined'){ el.querySelector('.nogl').style.display='flex'; return; }
+  const w=el.clientWidth||800, h=el.clientHeight||280;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(w,h); el.appendChild(renderer.domElement);
+  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(45,w/h,.1,100); camera.position.set(0,.4,6.5); camera.lookAt(0,0,0);
+  scene.add(new THREE.AmbientLight(0xffffff,.75)); const dl=new THREE.DirectionalLight(0xffffff,.55); dl.position.set(5,10,7); scene.add(dl);
+  const g=new THREE.Group(); scene.add(g); let sd=7; const r=()=>{ sd=(sd*16807)%2147483647; return (sd-1)/2147483646; };
+  const pal=['--accent','--amber','--violet','--good'], cubes=[];
+  for(let i=0;i<48;i++){ const m=new THREE.Mesh(new THREE.BoxGeometry(.55,.32,.32),new THREE.MeshStandardMaterial({color:new THREE.Color(css(pal[i%4])),roughness:.5}));
+    m.userData={home:new THREE.Vector3((i%8-3.5)*.72,(2.5-Math.floor(i/8))*.42,0),wild:new THREE.Vector3((r()-.5)*14,(r()-.5)*5,(r()-.5)*6),rot:[r()*6,r()*6,r()*6]}; g.add(m); cubes.push(m); }
+  new ResizeObserver(()=>{ const W=el.clientWidth,H=el.clientHeight; if(!W||!H) return; renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix(); }).observe(el);
+  let t=0; (function loop(){ t+=.006; const k=(Math.sin(t)+1)/2, e=k*k*(3-2*k);
+    cubes.forEach(m=>{ m.position.lerpVectors(m.userData.wild,m.userData.home,e); m.rotation.set(m.userData.rot[0]*(1-e),m.userData.rot[1]*(1-e),m.userData.rot[2]*(1-e)); });
+    g.rotation.y=Math.sin(t*.7)*.25; renderer.render(scene,camera); requestAnimationFrame(loop); })();
+};
+
+/* sprint link */
+if (SPRINT_URL){ $('#sprintLink').href=SPRINT_URL; $('#sprintLinkRow').style.display='flex'; $('#sprintNoLink').style.display='none'; }
+
+/* 3D helper for the scaling and cross-validation pages */
+const scenes=[];
+const col = v => new THREE.Color(css(v));
+function make3D(el, opts={}){
+  if (typeof THREE==='undefined'){ el.querySelector('.nogl').style.display='flex'; return null; }
+  const w=el.clientWidth||600, h=el.clientHeight||380;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(w,h); el.appendChild(renderer.domElement);
+  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(45,w/h,.1,200);
+  camera.position.set(...(opts.cam||[0,2,12])); camera.lookAt(0,0,0);
+  scene.add(new THREE.AmbientLight(0xffffff,.75)); const dl=new THREE.DirectionalLight(0xffffff,.55); dl.position.set(5,10,7); scene.add(dl);
+  const group=new THREE.Group(); scene.add(group); group.rotation.set(opts.rx||0.35, opts.ry||-0.6, 0);
+  let drag=false, px=0, py=0, auto=true;
+  el.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;auto=false;el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{ if(!drag) return; group.rotation.y+=(e.clientX-px)*.01; group.rotation.x=Math.max(-1.3,Math.min(1.3,group.rotation.x+(e.clientY-py)*.01)); px=e.clientX; py=e.clientY; });
+  el.addEventListener('pointerup',()=>drag=false);
+  const S={el,group,tick:null};
+  (function loop(){ if(el.closest('.slide').classList.contains('active')){ if(auto && opts.spin!==0) group.rotation.y+=(opts.spin||0.003); if(S.tick) S.tick(); renderer.render(scene,camera); } requestAnimationFrame(loop); })();
+  new ResizeObserver(()=>{ const W=el.clientWidth,H=el.clientHeight; if(!W||!H) return; renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix(); }).observe(el);
+  scenes.push(S); return S;
+}
+function textSprite(txt,pos,size=.9,color){
+  const c=document.createElement('canvas'); c.width=512; c.height=128; const x=c.getContext('2d');
+  x.font='600 52px "Source Sans 3", sans-serif'; x.fillStyle=color||css('--ink'); x.textAlign='center'; x.textBaseline='middle'; x.fillText(txt,256,64);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));
+  s.scale.set(size*4,size,1); s.position.copy(pos); return s;
+}
+let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
+const gauss=()=>{ let u=0,v=0; while(!u)u=rnd(); while(!v)v=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+
+/* application flip cards */
+const APPS=[
+ ['Natural language processing','Large collections of text covering the words, topics, and writing styles the system will face.','An email sorter needs thousands of real emails, including angry, misspelled, and off-topic ones.'],
+ ['Computer vision','Images or video frames, usually labeled by a person.','A crack detector needs photos of cracked and uncracked parts in the lighting and angles it will see in use.'],
+ ['Recommendation','Records of what people did: clicks, views, purchases, ratings.','A streaming service needs viewing histories from many users.'],
+ ['Predictive maintenance','Time-series data: sensor readings with a timestamp on every value.','An engine model needs temperature, vibration, and pressure over thousands of flight hours, plus records of when parts failed.'],
+ ['Fraud detection','Transaction records, each labeled fraud or legitimate.','A bank needs millions of normal purchases and enough confirmed fraud examples to learn what fraud looks like.'],
+ ['Your turn','Think about your capstone organization.','What data would its AI need? Who would create the labels?']];
+$('#appCards').innerHTML=APPS.map(a=>`<div class="flip"><div class="inner"><div class="face front"><div class="kicker">Application</div><h3>${a[0]}</h3><span class="muted" style="font-size:.85rem">Select to flip</span></div><div class="face back"><b>Data it needs:</b> ${a[1]}<br><br><b>Example:</b> ${a[2]}</div></div></div>`).join('');
+$$('.flip').forEach(f=>f.onclick=()=>f.classList.toggle('open'));
+
+/* format sorter */
+INIT.sorter = () => {
+  const items=[['A spreadsheet of household goods shipments: weight, origin, destination, damage claim','S'],['Photos of the flight line taken for a corrosion study','U'],['Recorded voicemails to a help desk','U'],['An online order saved as JSON (JavaScript Object Notation): labeled fields plus a free-text gift note','M'],['A work order email: sender, date, subject, then a typed description','M'],['A payroll table with one row per employee','S'],['The text of 10,000 social media posts','U'],['A sensor log with a timestamp column and a temperature column','S']];
+  const lab={S:'Structured',U:'Unstructured',M:'Semi-structured'}; let score=0;
+  $('#sortItems').innerHTML=items.map((it,i)=>`<div class="q" style="padding:10px 14px;margin:8px 0"><div class="qt" style="font-weight:400">${it[0]}</div><div class="opts">${Object.keys(lab).map(k=>`<button class="opt" data-i="${i}" data-k="${k}">${lab[k]}</button>`).join('')}</div></div>`).join('');
+  $$('#sortItems .opt').forEach(b=>b.onclick=()=>{ const i=b.dataset.i, box=b.parentElement; if(box.dataset.done) return; box.dataset.done=1;
+    const ok=b.dataset.k===items[i][1]; b.classList.add(ok?'right':'wrong'); if(!ok) box.querySelector(`[data-k="${items[i][1]}"]`).classList.add('right');
+    if(ok) score++; $('#sortScore').textContent=`${score} / 8`; });
+};
+
+/* fraud canvas */
+function drawFraud(showF){
+  const c=$('#fraudCanvas'), x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height);
+  for(let i=0;i<100;i++){ const r=Math.floor(i/20), q=i%20; x.fillStyle=css('--accent'); x.fillRect(10+q*24,15+r*46,20,40); }
+  if(showF){ x.fillStyle=css('--bad'); x.fillRect(10+7*24+9,15+2*46+19,2,2); x.strokeStyle=css('--bad'); x.lineWidth=3; x.beginPath(); x.arc(10+7*24+10,15+2*46+20,26,0,7); x.stroke(); }
+}
+drawFraud(false);
+$('#fraudBtn').onclick=()=>{ drawFraud(true); $('#fraudMsg').innerHTML='The red ring marks one square. Inside it, the 40 fraud examples fill <b>less than one thousandth</b> of that square. At this scale they are a single dot. Plenty of data, almost none of the part that matters.'; };
+
+/* bias cases */
+INIT.cases = () => {
+  const TYPES=['Selection bias','Representation bias','Measurement bias','Historical bias','Proxy bias'];
+  const C=[
+   {tab:'Speech recognition',what:'In 2020, Stanford researchers tested speech recognition systems from five major tech companies. These systems turn spoken words into text. They misheard Black speakers about twice as often as white speakers.',q:'Which type of bias caused the gap?',opts:TYPES,ans:1,part:[0],type:'Representation bias',
+    why:'Black speakers were not shut out of the training data. They appeared too rarely for the systems to learn the ways many Black Americans speak.',
+    how:'The training recordings held far fewer examples of African American speech patterns than of other speech. The systems learned the common patterns well and the rare ones poorly.',
+    catch:'Count recordings by speaker group and compare with the people who will use the system. Test the error rate for each group before release.',
+    partWhy:'Close. Selection bias means a group was left out by how the data was collected. Here the group was in the data, just too rarely.'},
+   {tab:'Criminal justice',what:'Some courts use risk tools that predict whether a person will be arrested again. The tools learn from past arrest records. Arrests happen where police patrol, and some neighborhoods have been patrolled far more heavily than others.',q:'Which type of bias is in the arrest data?',opts:TYPES,ans:2,part:[3],type:'Measurement bias, feeding historical bias',
+    why:'The output variable is supposed to measure crime. It actually measures arrests, which depend on where police patrol.',
+    how:'Heavily patrolled neighborhoods produce more arrests for the same amount of crime. Years of these records also carry past patrol decisions into the data, which adds historical bias. The next page shows the loop.',
+    catch:'Ask what each label really measures. Compare arrest data with a measure that does not depend on patrols, such as crimes reported by victims.',
+    partWhy:'Partly right. Historical bias is in the data too. The root problem is that the label measures police activity instead of crime: measurement bias.'},
+   {tab:'Hiring',what:'Many companies use automated screens that rank resumes before a person reads them. These screens often score applicants lower for gaps in employment. Military spouses often have gaps after a spouse\'s deployment or a PCS move.',q:'Which type of bias does the gap create?',opts:TYPES,ans:4,part:[3],type:'Proxy bias',
+    why:'The gap looks harmless, but it stands in for caregiving, illness, a deployment, or a move the applicant did not choose. The screen never sees "military spouse," but the gap carries that information anyway.',
+    how:'Screens learn from past hiring, where applicants with unbroken work histories were hired more often. The model learned "gap means weaker applicant."',
+    catch:'For every variable, ask what else it could stand for. Compare how often applicants with and without gaps pass the screen.',
+    partWhy:'Partly right. Past hiring decisions add historical bias. The mechanism that hurts military spouses is the gap standing in for their situation: proxy bias.'},
+   {tab:'Public services',what:'The UK government used a model to flag welfare claims for fraud checks. The department said the system raised no immediate concerns about discrimination. In 2024, an internal review found it selected people unevenly by age, disability, marital status, and nationality.',q:'Which check revealed the problem?',opts:['Measuring overall accuracy','Removing sensitive columns from the data','Breaking the results down by group','Adding more training data'],ans:2,part:[],type:'Breaking the results down by group',
+    why:'The overall results looked acceptable. Only when the review counted who got flagged within each group did the uneven pattern appear.',
+    how:'The review did not report one single cause. The lesson is detection: you cannot fix a gap you never measure.',
+    catch:'Run the group breakdown before launch. Compare how often each group is flagged with that group\'s share of claims.',partWhy:''}];
+  $('#caseTabs').innerHTML=C.map((c,i)=>`<button class="tab${i?'':' on'}" data-i="${i}">${c.tab}</button>`).join('');
+  const showC=i=>{ const c=C[i];
+    $('#caseBody').innerHTML=`<h3>${c.tab}</h3><p>${c.what}</p><div class="q" style="margin:10px 0"><div class="qt">${c.q}</div><div class="opts" id="caseOpts">${c.opts.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div></div>
+      <div id="caseExp" style="display:none"><div id="caseVerdict" style="font-weight:700;margin:8px 0"></div><table><tr><th style="width:24%">The answer</th><td><b style="color:var(--accent)">${c.type}</b></td></tr><tr><th>Why this answer</th><td>${c.why}</td></tr><tr><th>How it got into the data</th><td>${c.how}</td></tr><tr><th>How a team could have caught it</th><td>${c.catch}</td></tr></table></div>`;
+    $$('#caseOpts .opt').forEach(o=>o.onclick=()=>{ const j=+o.dataset.j;
+      $$('#caseOpts .opt').forEach(x=>{ x.classList.remove('right','wrong','part'); const k=+x.dataset.j; if(k===c.ans) x.classList.add('right'); else if(k===j) x.classList.add(c.part.includes(k)?'part':'wrong'); });
+      $('#caseVerdict').innerHTML = j===c.ans?'<span class="good">Correct.</span>':c.part.includes(j)?`<span class="amb">${c.partWhy}</span>`:'<span class="bad">Not this one.</span> Read why below.';
+      $('#caseExp').style.display='block'; }); };
+  $$('#caseTabs .tab').forEach(t=>t.onclick=()=>{ $$('#caseTabs .tab').forEach(x=>x.classList.remove('on')); t.classList.add('on'); showC(+t.dataset.i); });
+  showC(0);
+};
+
+/* scaling 3D */
+INIT.scaling = () => {
+  seed=21; const data=[];
+  for(let i=0;i<70;i++) data.push([Math.min(12000,Math.max(0,5500+gauss()*2600)), Math.min(10,Math.max(0,Math.round(2+gauss()*2.2))), Math.min(30,Math.max(0,12+gauss()*7))]);
+  const parts=[[6000,1,14],[6500,9,14],[5000,1,14]];
+  const all=data.concat(parts), mean=[0,1,2].map(k=>all.reduce((s,d)=>s+d[k],0)/all.length), sd=[0,1,2].map(k=>Math.sqrt(all.reduce((s,d)=>s+(d[k]-mean[k])**2,0)/all.length));
+  const MAP={raw:d=>[d[0]/1000-6,d[1]/1000,d[2]/1000], norm:d=>[d[0]/12000*6-3,d[1]/10*6-3,d[2]/30*6-3], std:d=>[(d[0]-mean[0])/sd[0]*1.6,(d[1]-mean[1])/sd[1]*1.6,(d[2]-mean[2])/sd[2]*1.6]};
+  const S=make3D($('#scaleView'),{cam:[0,2,14]}); let meshes=[], mode='raw', t=1, from='raw';
+  if(S){
+    const g=new THREE.SphereGeometry(.13,12,10);
+    data.forEach(d=>{ const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:col('--muted')})); S.group.add(m); meshes.push({m,d}); });
+    [['--accent','A'],['--bad','B'],['--amber','C']].forEach((c,i)=>{ const m=new THREE.Mesh(new THREE.SphereGeometry(.3,18,14),new THREE.MeshStandardMaterial({color:col(c[0]),emissive:col(c[0]),emissiveIntensity:.25}));
+      m.add(textSprite(c[1],new THREE.Vector3(0,.55,0),.7,css(c[0]))); S.group.add(m); meshes.push({m,d:parts[i]}); });
+    const axMat=new THREE.LineBasicMaterial({color:css('--muted')});
+    const lines=[0,1,2].map(()=>{ const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),axMat); S.group.add(l); return l; });
+    const labels=['flight hours','faults','age (years)'].map(t=>{ const s=textSprite(t,new THREE.Vector3(),.6); S.group.add(s); return s; });
+    const setAxes=m=>{ const o=MAP[m]([0,0,0]), mx=MAP[m]([12000,10,30]); const ends=[[mx[0],o[1],o[2]],[o[0],mx[1],o[2]],[o[0],o[1],mx[2]]];
+      lines.forEach((l,i)=>l.geometry.setFromPoints([new THREE.Vector3(...o),new THREE.Vector3(...ends[i])]));
+      labels.forEach((l,i)=>{ const e=ends[i]; l.position.set(e[0]+(i===0?1.4:0),e[1]+(i===1?.5:0)+(i===2?.3:0),e[2]+(i===2?.6:0)); }); };
+    meshes.forEach(o=>o.m.position.set(...MAP.raw(o.d))); setAxes('raw');
+    S.tick=()=>{ if(t<1){ t=Math.min(1,t+.03); const e=t*t*(3-2*t); meshes.forEach(o=>{ const a=MAP[from](o.d), b=MAP[mode](o.d); o.m.position.set(a[0]+(b[0]-a[0])*e,a[1]+(b[1]-a[1])*e,a[2]+(b[2]-a[2])*e); }); if(t>=1) setAxes(mode); } };
+  }
+  const caps={raw:'<b>Raw units, drawn to the same scale:</b> one flight hour, one fault, and one year are the same length on screen. Hours run to 12,000. Faults stop at 10. Every point flattens onto the hours axis. The model cannot see the faults.',
+   norm:'<b>Normalized:</b> every variable now runs from 0 to 1. Faults and age spread out as much as hours do. Each variable gets an equal say in the distance.',
+   std:'<b>Standardized:</b> each variable is centered on its average and measured in standard deviations. The cloud sits around 0 on every axis.'};
+  const F={raw:d=>[d[0],d[1]],norm:d=>[d[0]/12000,d[1]/10],std:d=>[(d[0]-mean[0])/sd[0],(d[1]-mean[1])/sd[1]]};
+  const dist=(a,b,f)=>Math.hypot(f(a)[0]-f(b)[0],f(a)[1]-f(b)[1]);
+  const show=m=>{ $('#scaleCaption').innerHTML=caps[m]; const ab=dist(parts[0],parts[1],F[m]), ac=dist(parts[0],parts[2],F[m]), dp=m==='raw'?0:2;
+    $('#scaleDist').innerHTML=`<div class="muted">Distance from A, using hours and faults</div><div>to <b style="color:var(--bad)">B</b>: <b>${ab.toFixed(dp)}</b> &nbsp; to <b style="color:var(--amber)">C</b>: <b>${ac.toFixed(dp)}</b></div><p style="margin:.5em 0 0">The model says the part most like A is <b>${ab<ac?'B':'C'}</b>.${m==='raw'?' B has 9 faults and A has 1. The hours drowned out the faults.':' C matches A\'s fault history. Scaling changed the answer.'}</p>`; };
+  $$('#scaleTabs .tab').forEach(b=>b.onclick=()=>{ $$('#scaleTabs .tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); from=mode; mode=b.dataset.m; t=0; show(mode); });
+  show('raw');
+};
+
+/* encoding */
+INIT.encode = () => {
+  const R=['Army','Navy','Air Force','Marine Corps','Navy'], L={'Army':1,'Navy':2,'Air Force':3,'Marine Corps':4}, B=['Army','Navy','Air Force','Marine Corps'];
+  const draw=m=>{ if(m==='label'){ $('#encTable').innerHTML='<tr><th>branch</th><th>branch_code</th></tr>'+R.map(r=>`<tr><td>${r}</td><td><b>${L[r]}</b></td></tr>`).join('');
+      $('#encText').innerHTML='<div class="card" style="border-color:var(--bad)"><h3 class="bad">What the model may believe</h3><p>Marine Corps (4) = 2 × Navy (2).<br>Air Force (3) is "between" Navy and Marine Corps.</p><p>None of that is true. Branches have no order. <b>Label encoding</b> fits only when the categories have a real order.</p></div>'; }
+    else { $('#encTable').innerHTML='<tr><th>branch</th>'+B.map(b=>`<th>is_${b.replace(' ','_')}</th>`).join('')+'</tr>'+R.map(r=>`<tr><td>${r}</td>`+B.map(b=>`<td>${r===b?'<b class="good">1</b>':'0'}</td>`).join('')+'</tr>').join('');
+      $('#encText').innerHTML='<div class="card" style="border-color:var(--good)"><h3 class="good">One-hot encoding</h3><p>Each branch gets its own yes-or-no column: 1 in the column that applies, 0 in the rest. No branch is "bigger" than another.</p><p>The cost: one new column per category.</p></div>'; } };
+  $$('#encTabs .tab').forEach(t=>t.onclick=()=>{ $$('#encTabs .tab').forEach(x=>x.classList.remove('on')); t.classList.add('on'); draw(t.dataset.e); }); draw('label');
+  const Q=[{q:'1. Pay grade (E-1 to E-9): which method fits?',ans:0,yes:'Pay grades have a real order. Numbering them 1 to 9 keeps that order, so the model learns something true.',no:'One-hot encoding throws away the order. Pay grades have a real order, so label encoding keeps something true.'},
+   {q:'2. Branch of service: which method fits?',ans:1,yes:'Branches have no order. One-hot encoding gives each branch its own yes-or-no column, so the model cannot invent an order.',no:'Label encoding makes the model believe the Marine Corps (4) is twice the Navy (2). Branches need their own yes-or-no columns.'}];
+  $('#encQs').innerHTML=Q.map((x,i)=>`<div class="q"><div class="qt">${x.q}</div><div class="opts">`+['Label encoding','One-hot encoding'].map((o,j)=>`<button class="opt" data-q="${i}" data-j="${j}">${o}</button>`).join('')+`</div><div class="why"></div></div>`).join('');
+  $$('#encQs .opt').forEach(b=>b.onclick=()=>{ const w=b.closest('.q'); if(w.dataset.done) return; w.dataset.done=1;
+    const x=Q[+b.dataset.q], ok=+b.dataset.j===x.ans; b.classList.add(ok?'right':'wrong'); w.querySelector(`.opt[data-j="${x.ans}"]`).classList.add('right');
+    const y=w.querySelector('.why'); y.innerHTML=`<b class="${ok?'good':'bad'}">${ok?'Correct.':'Not this one.'}</b> ${ok?x.yes:x.no}`; y.classList.add('show'); });
+};
+
+/* k-fold 3D */
+INIT.kfold = () => {
+  const SC=[88,91,62,90,89]; let k=-1;
+  const S=make3D($('#kfView'),{cam:[0,3,12],ry:-.5,rx:.25,spin:0}); const slabs=[], labels=[];
+  if(S){ for(let i=0;i<5;i++){ const m=new THREE.Mesh(new THREE.BoxGeometry(4.2,.75,2.6),new THREE.MeshStandardMaterial({color:col('--accent'),transparent:true,opacity:.85,roughness:.4}));
+      m.position.y=(2-i)*.95; S.group.add(m); slabs.push(m); const set={};
+      ['plain','train','test'].forEach(kind=>{ const txt=kind==='plain'?`Fold ${i+1}`:kind==='train'?`Fold ${i+1}: Train`:`Fold ${i+1}: Test`;
+        const l=textSprite(txt,new THREE.Vector3(-3.9,(2-i)*.95,1.3),.7,kind==='test'?css('--bad'):undefined); l.visible=kind==='plain'; S.group.add(l); set[kind]=l; });
+      labels.push(set); }
+    S.tick=()=>{ slabs.forEach((m,i)=>{ m.position.x+=((i===k?1.6:0)-m.position.x)*.12; }); }; }
+  const draw=()=>{
+    let h='<tr><th>Round</th>'+[1,2,3,4,5].map(f=>`<th>Fold ${f}</th>`).join('')+'<th>Score</th></tr>';
+    for(let r=0;r<5;r++){ h+= r<=k ? `<tr><td><b>Round ${r+1}</b></td>`+[0,1,2,3,4].map(f=>f===r?`<td style="background:${SC[r]<70?'var(--bad-soft)':'var(--amber-soft)'};font-weight:700">Test</td>`:`<td style="background:var(--accent-soft)">Train</td>`).join('')+`<td><b class="${SC[r]<70?'bad':''}">${SC[r]}%</b></td></tr>`
+      : `<tr><td class="muted">Round ${r+1}</td><td colspan="6" class="muted">not run yet</td></tr>`; }
+    $('#kfTable').innerHTML=h;
+    slabs.forEach((m,i)=>{ m.material.color=col(k<0?'--accent':i===k?(SC[i]<70?'--bad':'--amber'):'--accent'); labels[i].plain.visible=k<0; labels[i].train.visible=k>=0&&i!==k; labels[i].test.visible=k>=0&&i===k; });
+    const others=[1,2,3,4,5].filter(f=>f!==k+1).join(', ');
+    $('#kfMsg').innerHTML = k<0 ? 'The 5,000 appointments are split into five folds of 1,000, the five blocks. No round has run yet.'
+      : `<b>Round ${k+1}.</b> The model learned from folds ${others}, then predicted the 1,000 appointments in fold ${k+1}, which it had never seen. It got <b>${SC[k]*10} of 1,000</b> right: <b class="${SC[k]<70?'bad':''}">${SC[k]} percent</b>.`+
+        (k<4?' Select <b>Run the next round</b>.':'<br><br><b>Average: 84 percent.</b> It looks fine. The real finding is <b class="bad">round 3: 62 percent</b>. Something about the appointments in fold 3 is different, such as a time period, a clinic site, or a group of patients. One overall number would have hidden it.');
+    $('#kfRun').disabled=k>=4; };
+  $('#kfRun').onclick=()=>{ if(k<4){k++; draw();} }; $('#kfReset').onclick=()=>{ k=-1; draw(); }; draw();
+};
+
+/* hook */
+$$('#hookOpts .opt').forEach(b=>b.onclick=()=>{ const v=+b.dataset.v;
+  $$('#hookOpts .opt').forEach(o=>o.classList.remove('right','wrong')); b.classList.add(v===2?'right':'wrong'); $('#hookOpts [data-v="2"]').classList.add('right');
+  const V=['<span class="bad">Not 50 percent.</span> 50 percent would mean the model is wrong on half of all transactions. It is wrong on only 40 of 5,000,000.',
+   '<span class="bad">Not 90 percent.</span> 90 percent would mean 500,000 wrong answers. It has only 40. Forty cases are too few to move the score.',
+   '<span class="good">Correct: over 99 percent.</span> The model is wrong on only 40 of 5,000,000 transactions. It scores almost perfectly and catches no fraud.'];
+  $('#hookVerdict').innerHTML=V[v]; $('#hookWhy').classList.add('show'); });
+
+/* data grid */
+INIT.grid = () => {
+  const head=['patient_id','station','visit_date','age','temp_F','branch'];
+  const rows=[['P-1001','MCAS Iwakuni','2026-09-14','34','98.6','USMC'],['P-1002','Iwakuni','2026-09-14','41','99.1','Navy'],['P-1003','MCAS Iwakuni','09/15/26','29','98.4','Marine Corps'],['P-1004','MCAS Iwakuni','2026-09-15','212','98.9','USMC'],['P-1005','MCAS Iwakuni','2026-09-16','52','986','Army'],['P-1006','MCAS Iwakuni','2026-09-16','47','','USMC'],['P-1007','MCAS Iwakuni','2019-03-02','38','98.7','USMC'],['P-1008','MCAS Iwakuni','2026-09-17','25','98.2','Navy'],['P-1008','MCAS Iwakuni','2026-09-17','25','98.2','Navy'],['P-1010','MCAS Iwakuni','2026-09-18','61','100.4','USMC']];
+  const P={'1,1':'Consistency: "Iwakuni" and "MCAS Iwakuni" are the same place written two ways.','2,2':'Consistency: date written 09/15/26 instead of 2026-09-15.','2,5':'Consistency: "Marine Corps" and "USMC" mean the same branch.','3,3':'Accuracy: an age of 212 is impossible.','4,4':'Accuracy: 986 is impossible. Probably 98.6 with a lost decimal point.','5,4':'Completeness: temperature is blank.','6,2':'Timeliness: a 2019 visit in a 2026 dataset.','8,0':'Accuracy: this row duplicates the row above it.'};
+  const T={'9,4':'100.4 is a real fever, not an error. Keep it.'};
+  $('#dgrid').innerHTML='<tr><th>Row</th>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr>'+rows.map((r,i)=>`<tr><th>${i+1}</th>`+r.map((v,j)=>`<td data-k="${i},${j}">${v||'&nbsp;'}</td>`).join('')+'</tr>').join('');
+  $$('#dgrid td').forEach(td=>td.onclick=()=>{ if($('#dgrid').dataset.checked) return; td.classList.toggle('flag'); });
+  $('#gridCheck').onclick=()=>{ $('#dgrid').dataset.checked=1; let hit=0; const rep=[];
+    $$('#dgrid td').forEach(td=>{ const k=td.dataset.k, f=td.classList.contains('flag'); td.classList.remove('flag');
+      if(P[k]){ td.classList.add(f?'hit':'miss'); if(f) hit++; rep.push(`<li><b>Row ${+k.split(',')[0]+1}:</b> ${P[k]} ${f?'<span class="good">Found.</span>':'<span class="bad">Missed.</span>'}</li>`); }
+      else if(f){ td.classList.add('fp'); rep.push(`<li><b>Row ${+k.split(',')[0]+1}:</b> ${T[k]||'This value is fine.'}</li>`); } });
+    $('#gridScore').textContent=`You found ${hit} of 8.`; $('#gridReport').innerHTML=rep.join(''); };
+  $('#gridReset').onclick=()=>{ delete $('#dgrid').dataset.checked; $$('#dgrid td').forEach(td=>td.className=''); $('#gridScore').textContent=''; $('#gridReport').innerHTML=''; };
+};
+
+/* feedback loop */
+let loopY=0;
+function loopShare(y){ let x=.6; for(let i=0;i<y;i++){ const p=Math.pow(x,1.3), q=Math.pow(1-x,1.3); x=p/(p+q); } return Math.round(x*100); }
+function loopDraw(){
+  const a=loopShare(loopY), prev=loopShare(Math.max(0,loopY-1));
+  $('#loopA').style.width=a+'%'; $('#loopA').textContent=`A ${a}%`;
+  $('#loopB').style.width=(100-a)+'%'; $('#loopB').textContent=`B ${100-a}%`;
+  $('#loopYear').textContent=`Year ${loopY}`;
+  const arrA=2*a, arrB=200-arrA;
+  $('#loopMsg').innerHTML = loopY===0
+    ? `<b>Year 0.</b> A has 60 percent of the patrols, so it makes 60 percent of the arrests: <b>${arrA}</b> in A and <b>${arrB}</b> in B. Both had 200 real crimes.`
+    : `<b>Year ${loopY}.</b> Last year's arrests made A look riskier, so the model moved patrols there. A now has <b>${a} percent</b> of the patrols, up from ${prev}. This year: <b>${arrA}</b> arrests in A, <b>${arrB}</b> in B. Real crime is still 200 in each.`;
+  $('#loopRun').disabled=loopY>=5; $('#loopEnd').style.display=loopY>=5?'block':'none';
+}
+$('#loopRun').onclick=()=>{ if(loopY<5){ loopY++; loopDraw(); } };
+$('#loopReset').onclick=()=>{ loopY=0; loopDraw(); };
+loopDraw();
+
+/* missing values */
+INIT.mv = () => {
+  const pts=[['P-01',122,0],['P-02',null,1],['P-03',131,0],['P-04',118,0],['P-05',null,1],['P-06',140,1],['P-07',126,0],['P-08',null,0],['P-09',135,0],['P-10',119,0]];
+  const TX=['<h3>Delete the rows</h3><p>Drops the 120 patients with no reading.</p><p><b>Risk:</b> you lose 12 percent of the data and remove a specific group. Half of the deleted patients missed appointments, so the no-show rate the model learns falls from <b>18 percent</b> to <b>13.6 percent</b>.</p>',
+   '<h3>Fill in a value</h3><p>Replaces each blank with the <b>median</b>, the middle reading: 128.</p><p><b>Risk:</b> the model sees 120 patients with perfectly typical blood pressure. That is false. Their real average was about 142.</p>',
+   '<h3>Fill in and flag</h3><p>Fills the blank with 128 <b>and</b> adds a variable that records "this was missing."</p><p><b>Why it is often best:</b> the flag carries information. 50 percent of flagged patients missed appointments, versus 13.6 percent of everyone else.</p>'];
+  const draw=o=>{ $('#mvText').innerHTML=TX[o];
+    let h='<tr><th>Patient</th><th>Blood pressure</th>'+(o===2?'<th>bp_missing</th>':'')+'<th>Missed appt</th></tr>';
+    pts.forEach(p=>{ if(o===0&&p[1]===null) return; const bp=p[1]===null?'<b class="amb">128</b>':p[1];
+      h+=`<tr><td>${p[0]}</td><td>${bp}</td>${o===2?`<td>${p[1]===null?'<b class="amb">1</b>':'0'}</td>`:''}<td>${p[2]?'Yes':'No'}</td></tr>`; });
+    if(o===0) h+='<tr><td colspan="3" class="bad">P-02, P-05, P-08 removed</td></tr>';
+    $('#mvTable').innerHTML=h; };
+  $$('#mvTabs .tab').forEach(t=>t.onclick=()=>{ $$('#mvTabs .tab').forEach(x=>x.classList.remove('on')); t.classList.add('on'); draw(+t.dataset.o); });
+  draw(0);
+};
+
+/* outliers */
+INIT.outliers = () => {
+  const O=[['Body temperature: 986 °F','E','An error. Probably 98.6 with the decimal point lost.'],['A $48,000 purchase at 3 a.m. on a card that usually spends $60','S','Real. This could be fraud, the exact thing the model must catch.'],['Resting heart rate of 38 for a marathon runner','S','Real. Normal for an elite endurance athlete.'],['Patient age: 212','E','An error. No one is 212.'],['A part with 120,000 flight hours, on an aircraft type retired at 30,000','E','An error. The part could not have flown that long.'],['One patient with 14 emergency room visits in a month','S','Real. A patient in trouble, and the kind of record a care model must learn from.']];
+  let sc=0;
+  $('#outItems').innerHTML=O.map((o,i)=>`<div class="q" style="padding:10px 14px;margin:8px 0"><div class="qt" style="font-weight:400">${o[0]}</div><div class="opts"><button class="opt" data-i="${i}" data-k="E">Error: fix it</button><button class="opt" data-i="${i}" data-k="S">Real: keep it</button></div><div class="why"></div></div>`).join('');
+  $$('#outItems .opt').forEach(b=>b.onclick=()=>{ const o=O[b.dataset.i], w=b.closest('.q'); if(w.dataset.done) return; w.dataset.done=1;
+    const ok=b.dataset.k===o[1]; b.classList.add(ok?'right':'wrong'); if(!ok) w.querySelector(`[data-k="${o[1]}"]`).classList.add('right');
+    w.querySelector('.why').innerHTML=`<b class="${ok?'good':'bad'}">${ok?'Correct.':'Not this one.'}</b> ${o[2]}`; w.querySelector('.why').classList.add('show'); if(ok) sc++; $('#outScore').textContent=`${sc} / 6`; });
+};
+
+/* feature engineering */
+INIT.feature = () => {
+  const D=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'], M=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const run=()=>{ const b=new Date($('#feB').value+'T12:00'), a=new Date($('#feA').value+'T12:00'); if(isNaN(a)||isNaN(b)) return;
+    const days=Math.round((a-b)/864e5), wk=a.getDay();
+    $('#feOut').innerHTML=`<tr><th>New variable</th><th>Value</th></tr><tr><td>Day of the week</td><td>${D[wk]}</td></tr><tr><td>Month</td><td>${M[a.getMonth()]}</td></tr><tr><td>Weekend or not</td><td>${wk===0||wk===6?'Weekend':'Weekday'}</td></tr><tr><td>Days between booking and appointment</td><td><b>${days}</b></td></tr>`+(days<0?'<tr><td colspan="2" class="bad">The appointment is before the booking. That is an accuracy problem.</td></tr>':''); };
+  const T=[{label:'Booked the same day',set:['2026-10-20','2026-10-20'],msg:'0 days. Plans rarely change in a few hours.'},
+   {label:'Booked one week ahead',set:['2026-10-13','2026-10-20'],msg:'7 days. A week is enough time for a schedule to change.'},
+   {label:'Booked three months ahead',set:['2026-07-20','2026-10-20'],msg:'92 days. A move, a new duty schedule, or a forgotten reminder can all get in the way.'},
+   {label:'Dates in the wrong order',set:['2026-10-21','2026-10-20'],msg:'-1 days. Building this variable also catches errors in the data.'}];
+  $('#feTries').innerHTML=T.map((t,i)=>`<button class="try" data-i="${i}"><b>Try it</b> ${t.label}</button>`).join('');
+  $$('#feTries .try').forEach(btn=>btn.onclick=()=>{ const t=T[+btn.dataset.i]; $('#feB').value=t.set[0]; $('#feA').value=t.set[1]; run();
+    $$('#feTries .try').forEach(x=>x.classList.toggle('on',x===btn)); $('#feMsg').innerHTML=t.msg; });
+  $('#feB').oninput=run; $('#feA').oninput=run; run();
+  const WHY=['Every weekday had about the same miss rate in real clinic data, 19 to 21 percent.','','The real clinic data covers only about six weeks, too short to judge months.','Most clinics are closed on weekends, so almost every appointment is a weekday.'];
+  $$('#feOpts .opt').forEach(o=>o.onclick=()=>{ const j=+o.dataset.j;
+    $$('#feOpts .opt').forEach(x=>{ x.classList.remove('right','wrong'); if(+x.dataset.j===1) x.classList.add('right'); });
+    if(j!==1) o.classList.add('wrong');
+    $('#feWhy').innerHTML=(j===1?'<b class="good">Correct.</b> ':`<b class="bad">Not this one.</b> ${WHY[j]} `)+
+      `Real data from 110,527 appointments at public clinics in Brazil in 2016:<table style="margin:8px 0;max-width:520px"><tr><th>Days between booking and appointment</th><th>Missed</th></tr><tr><td>Same day</td><td>about 5%</td></tr><tr><td>1 to 7 days</td><td>about 24%</td></tr><tr><td>8 to 30 days</td><td>about 32%</td></tr><tr><td>31 days or more</td><td>about 33%</td></tr></table>Neither date showed this on its own. The new variable beat every variable the clinic recorded.`;
+    $('#feWhy').classList.add('show'); });
+};
+
+/* leak */
+INIT.leak = () => {
+  const hues=['#0f6e6e','#b86a0c','#5b4bb0','#b3362c','#2e7d4f','#1e5aa8','#8a4f7d','#6b6b2a'];
+  const imgs=[]; for(let p=0;p<8;p++) for(let k=0;k<3;k++) imgs.push({p,k});
+  const tile=i=>`<div class="tile" data-p="${i.p}" style="background:${hues[i.p]}">P${i.p+1}</div>`;
+  const render=(tr,te)=>{ $('#lkTrain').innerHTML=tr.map(tile).join(''); $('#lkTest').innerHTML=te.map(tile).join('');
+    const a=new Set(tr.map(i=>i.p)), both=[...new Set(te.map(i=>i.p))].filter(p=>a.has(p));
+    $$('#lkTrain .tile, #lkTest .tile').forEach(t=>{ if(both.includes(+t.dataset.p)) t.classList.add('leak'); });
+    $('#lkMsg').innerHTML = both.length ? `<b class="bad">${both.length} of 8 patients appear in both sets.</b> The model already saw these patients in training, so its test score is inflated.` : '<b class="good">No patient appears in both sets.</b> The test score now measures how the model handles new patients.'; };
+  $('#lkImg').onclick=()=>{ const s=[...imgs].sort(()=>Math.random()-.5); render(s.slice(0,18),s.slice(18)); };
+  $('#lkPat').onclick=()=>{ const order=[...Array(8).keys()].sort(()=>Math.random()-.5), test=new Set(order.slice(0,2)); render(imgs.filter(i=>!test.has(i.p)),imgs.filter(i=>test.has(i.p))); };
+  $('#lkImg').click();
+};
+
+/* capstone practice check */
+const DT=['Structured records with labels','Labeled images','Free text','Time-series sensor readings'];
+const DIM=['Accuracy','Completeness','Consistency','Timeliness','Representativeness'];
+const BIAS=['Selection','Representation','Measurement','Historical','Proxy'];
+const LK=['Same person in two sets','Information from the future','Time mixed up','Preparing before splitting'];
+const CHECKS={
+ match:[['A base clinic wants a system that predicts which patients will miss their appointments.',DT,0,'Structured records of past appointments, each labeled showed or missed.'],
+  ['A logistics office wants to flag damaged boxes in photos taken at the loading dock.',DT,1,'Photos labeled damaged or undamaged, taken at that dock in its own lighting and angles.'],
+  ['A family readiness office wants to sort thousands of free-text survey comments by topic.',DT,2,'Free text. People must label a sample of comments by topic so the model has examples to learn from.'],
+  ['A maintenance shop wants to predict when a generator will fail.',DT,3,'Sensor readings with a timestamp on every value, plus records of when generators actually failed. Those failure records are the labels.']],
+ dim:[['A housing dataset lists move-in dates as "2026-11-10," "11/10/26," and "10 Nov 2026."',DIM,2,'Consistency. The same thing is written three ways.'],
+  ['A weather model for flight planning uses readings that stopped updating three weeks ago.',DIM,3,'Timeliness. Weather changes by the hour.'],
+  ['A speech recognition tool was trained almost entirely on recordings of American English speakers.',DIM,4,'Representativeness. It will serve many speakers the data barely includes.'],
+  ['A patient record shows a body temperature of 986 degrees.',DIM,0,'Accuracy. The value is impossible.'],
+  ['A customer survey is missing the income answer for 30 percent of respondents, mostly those who answered on a phone.',DIM,1,'Completeness, and the gaps are not random: they cluster in phone users, a specific group.']],
+ bias:[['A skin cancer detector was trained on photos from dermatology clinics where most patients had light skin.',BIAS,1,'Representation. Darker skin appears too rarely for the model to learn it well.'],
+  ['A model predicts which base housing units need repairs, using the number of repair requests filed.',BIAS,2,'Measurement. Requests measure who files them, not which units need repairs.'],
+  ['A college admissions model is trained on 30 years of past admission decisions.',BIAS,3,'Historical. The data can accurately record decisions made under unfair rules.'],
+  ['A car insurance model does not use race, but it does use neighborhood.',BIAS,4,'Proxy. Neighborhood can stand in for race.'],
+  ['A job satisfaction survey was sent only by email to employees with company email accounts.',BIAS,0,'Selection. Employees without company email, often hourly and field workers, were never asked.']],
+ tech:[['A dataset has a "duty station" column with 14 locations and no natural order.',['Label encoding','One-hot encoding','Normalization','Delete the column'],1,'One-hot encoding. Locations have no order, so numbering them 1 to 14 would invent one.'],
+  ['A k-nearest neighbors model uses annual income in dollars and number of dependents.',['Leave as is','One-hot encoding','Scaling (standardization)','Delete the income column'],2,'Scaling. Income in dollars would swamp dependents in every distance. Standardization handles the extreme incomes common in income data.'],
+  ['A fraud dataset has a few transactions worth 400 times the average.',['Delete them','Investigate first, likely keep','Fill with the median','Normalize them to 1'],1,'Investigate first. In fraud data the unusual transactions may be exactly what the model must learn.'],
+  ['A survey is missing the "years of service" answer for 15 percent of respondents.',['Delete the rows','Fill with the average','Fill in and flag','Ignore it'],2,'Fill in and flag. Keeps the rows and keeps the fact that the answer was missing, which may itself predict something.'],
+  ['A model uses a "date of first deployment" column and performs poorly.',['Feature engineering','One-hot encoding','Delete the column','Standardization'],0,'Feature engineering. A raw date means little. "Years since first deployment" carries the real information.']],
+ leak:[['A team building a sales forecast shuffles five years of daily sales and splits them randomly.',LK,2,'Time mixed up. The model trains on days that come after its test days. Train on older years, test on the newest.'],
+  ['A skin-condition model scores 97 percent. Many patients have several photos, split randomly across the sets.',LK,0,'The same patient lands in both sets, so the model can recognize patients instead of conditions. Split by patient.'],
+  ['A team tunes its model 40 times, checking the test score after each change.',['The test set became a validation set','Time mixed up','Information from the future','Nothing is wrong'],0,'After 40 looks, the team has tuned to the test set. It is no longer unseen. They need a fresh test set used once.']],
+ cap:[
+ ['Base lodging wants to know how many rooms will be booked each night next month. Which type of AI fits?',['Classification','Regression','Clustering','Generation'],1,'Regression. The output variable is a number of rooms, not a category.'],
+ ['A shipping office wants to flag damaged boxes in photos taken at the loading dock. Which pair fits best?',['Clustering with Google Gemini','Regression with Microsoft Excel','Classification using computer vision, with Amazon Rekognition Custom Labels','Recommendation with Amazon Personalize'],2,'The output is a category (damaged or not) and the data is photos, so classification using computer vision. Rekognition Custom Labels trains on your own labeled photos.'],
+ ['A family readiness office has 5,000 survey comments with no labels and wants to find what groups of concerns exist. Which type of AI fits?',['Classification','Clustering','Anomaly detection','Regression'],1,'Clustering. There are no labels, and the office wants the model to find the groups.'],
+ ['A motor pool wants to predict whether each vehicle will need repair within 30 days. Which is the output variable?',['Mileage','Days since last service','Will the vehicle need repair within 30 days','Vehicle type'],2,'The output variable is what the model predicts. Mileage, days since service, and vehicle type are input variables.'],
+ ['Which problem statement is ready for a capstone?',['Use AI to improve customer service.','Use machine learning on our sales data.','The front desk manager decides which members to call each Monday morning about overdue payments.','Build a chatbot.'],2,'Only this one names who decides, what they decide, and when. The others name a technology or a vague goal.'],
+ ['A student writes "My AI tool is classification." What is wrong?',['Nothing','Classification is a type of AI, not a tool','Classification is an output variable','Classification only works on photos'],1,'Classification is a type of AI. A tool is a product you could use, such as Amazon SageMaker Canvas.']
+]};
+$$('.checkset').forEach(box=>{
+  const set=CHECKS[box.dataset.check]; let sc=0;
+  /* Fixed mixed order: the same on every laptop, so the class can discuss "the third choice." */
+  const hash=t=>{ let h=2166136261; for(const ch of t){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; };
+  const SPOTS={4:[1,3,0,2,3,0,2,1],5:[1,3,0,4,2,0,3,1]}, shift=Object.keys(CHECKS).indexOf(box.dataset.check);
+  const order=(q,i)=>{ const n=q[1].length, sp=SPOTS[n]||[0];
+    const rest=q[1].map((o,j)=>j).filter(j=>j!==q[2]).sort((a,b)=>hash(q[0]+'|'+q[1][a])-hash(q[0]+'|'+q[1][b]));
+    rest.splice(sp[(i+shift)%sp.length]%n,0,q[2]); return rest; };
+  box.innerHTML=set.map((q,i)=>`<div class="q"><div class="qt">${i+1}. ${q[0]}</div><div class="opts">${order(q,i).map(j=>[q[1][j],j]).map(([o,j])=>`<button class="opt" data-q="${i}" data-j="${j}">${o}</button>`).join('')}</div><div class="why"></div></div>`).join('')+`<p>Score: <span class="score">0 / ${set.length}</span></p>`;
+  box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ const q=set[b.dataset.q], wrap=b.closest('.q'); if(wrap.dataset.done) return; wrap.dataset.done=1;
+    const ok=+b.dataset.j===q[2]; b.classList.add(ok?'right':'wrong'); wrap.querySelector(`.opt[data-j="${q[2]}"]`).classList.add('right');
+    const w=wrap.querySelector('.why'); w.innerHTML=`<b class="${ok?'good':'bad'}">${ok?'Correct.':'Not this one.'}</b> ${q[3]}`; w.classList.add('show');
+    if(ok) sc++; box.querySelector('.score').textContent=`${sc} / ${set.length}`; });
+});
+
+/* capstone plan */
+INIT.plan = () => {
+  const fields=$$('.plan [data-k]'), saved=store.get('u4cplan',{});
+  fields.forEach(f=>{ if(saved[f.dataset.k]!=null) f.value=saved[f.dataset.k];
+    f.addEventListener('input',()=>{ const d={}; fields.forEach(x=>d[x.dataset.k]=x.value); store.set('u4cplan',d); $('#pSaved').textContent='Saved in this browser'; }); });
+  const LBL={name:'My name',org:'My organization and what it does',problem:'1. The problem',output:'2. Output variable',kind:'Category or number',inputs:'2. Input variables',type:'3. Type of AI',datakind:'Kind of data',tool:'4. AI tool, and why it fits',risk:'The data problem I worry about most',feedback:'What my classmates said'};
+  $('#pDl').onclick=()=>{ const v={}; fields.forEach(f=>v[f.dataset.k]=f.value.trim());
+    const txt='Capstone Workshop: My capstone plan\n\n'+Object.keys(LBL).map(k=>`${LBL[k]}:\n${v[k]||'(blank)'}\n`).join('\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+    a.download=(v.name?v.name.replace(/[^A-Za-z0-9]+/g,'_'):'My')+'_Capstone_Plan.txt'; document.body.appendChild(a); a.click(); a.remove(); };
+  $('#pPrint').onclick=()=>window.print();
+  $('#pClear').onclick=()=>{ if(!confirm('Clear all your answers on this page?')) return; fields.forEach(f=>f.value=''); store.set('u4cplan',{}); $('#pSaved').textContent=''; };
+};
+
+/* start */
+const startAt = Math.min(store.get('u4cpage',0), slides.length-1);
+slides[startAt].classList.add('active'); cur=startAt; update();
+</script>
+</body>
+</html>
